@@ -255,16 +255,18 @@ function learnedCats(week){   // 截至某周已学过的分类
   for (let w=1; w<=Math.min(week,15); w++) (WEEK_CAT[w]||[]).forEach(c=>s.add(c));
   return Array.from(s);
 }
-function themedPick(seed, week, count){
-  // 本周分类题不够时,先从"以前已学过的分类"补,而不是从未学内容里随机凑
+function themedPick(seed, week, count, cap){
+  // cap:本周新题最多抽几道(不传=不限,尽量用满本周题);其余优先从"以前已学过的分类"补,不够再从未学内容兜底
   const rnd = mulberry32(hash(seed));
   const cs = WEEK_CAT[week];
   if (!cs) return shuffled(BANK.questions, rnd).slice(0, count);
   const learned = learnedCats(week);   // 含本周
-  const pool  = BANK.questions.filter(q=>cs.includes(q.cat));
-  const extra = BANK.questions.filter(q=>learned.includes(q.cat) && !cs.includes(q.cat));
-  const rest  = BANK.questions.filter(q=>!learned.includes(q.cat));
-  return shuffled(pool, rnd).concat(shuffled(extra, rnd)).concat(shuffled(rest, rnd)).slice(0, count);
+  const poolAll = shuffled(BANK.questions.filter(q=>cs.includes(q.cat)), rnd);
+  const extra   = shuffled(BANK.questions.filter(q=>learned.includes(q.cat) && !cs.includes(q.cat)), rnd);
+  const rest    = shuffled(BANK.questions.filter(q=>!learned.includes(q.cat)), rnd);
+  const poolNow  = cap ? poolAll.slice(0, cap) : poolAll;
+  const poolLeft = cap ? poolAll.slice(cap) : [];
+  return poolNow.concat(extra).concat(poolLeft).concat(rest).slice(0, count);
 }
 
 // ---- 通用答题引擎 ----
@@ -411,7 +413,7 @@ function renderDaily(){
 function startDaily(){
   const nm = ensureName("dqName"); if (!nm) return;
   const practice = !inRange || todayRow.rest || isFinal;
-  qStart("dqBody", themedPick("bra-"+todayKey, curWeek, 5), {
+  qStart("dqBody", themedPick("bra-"+todayKey, curWeek, 5, 2), {
     passScore: 60,
     onDone(c, wrong){
       if (!store.get("r:"+todayKey)) store.set("r:"+todayKey, {c, name:nm, practice});
