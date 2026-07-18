@@ -207,7 +207,7 @@ SCHED.forEach(r=>{
   if (VIDEO_OF[r.week]===r.key) p.push("看警示视频");
   p.push("答题5题");
   if (EXAM_OF[r.week]===r.key) p.push(MONTH_EXAMS.has(r.key) ? "月考(20题)" : "周考(10题)");
-  if (r.d.getDay()===5) p.push("错题复盘");
+  if (r.d.getDay()===5) p.push("讨论问答");
   r.act = p.join(" + ");
 });
 
@@ -373,7 +373,7 @@ function renderToday(){
         const er = store.get("e:"+todayKey);
         h += `<li><span class="dot">■</span>${isFinal?"结业考试 30 题":isMonthly?"月考 20 题":"周考 10 题"}<span class="st ${er?"ok":"todo"}">${er?`✓ ${er.score}分`:"待完成"}</span></li>`;
       }
-      if (r.d.getDay()===5) h += `<li><span class="dot">■</span>错题复盘 — 点开下方"错题"</li>`;
+      if (r.d.getDay()===5) h += `<li><span class="dot">■</span>本周讨论问答 — 用下方"本周简答"的题互相提问</li>`;
       h += `</ul>`;
     }
   }
