@@ -256,11 +256,15 @@ function learnedCats(week){   // 截至某周已学过的分类
   return Array.from(s);
 }
 function themedPick(seed, week, count){
+  // 本周分类题不够时,先从"以前已学过的分类"补,而不是从未学内容里随机凑
   const rnd = mulberry32(hash(seed));
   const cs = WEEK_CAT[week];
-  const pool = cs ? BANK.questions.filter(q=>cs.includes(q.cat)) : BANK.questions.slice();
-  const rest = cs ? BANK.questions.filter(q=>!cs.includes(q.cat)) : [];
-  return shuffled(pool, rnd).concat(shuffled(rest, rnd)).slice(0, count);
+  if (!cs) return shuffled(BANK.questions, rnd).slice(0, count);
+  const learned = learnedCats(week);   // 含本周
+  const pool  = BANK.questions.filter(q=>cs.includes(q.cat));
+  const extra = BANK.questions.filter(q=>learned.includes(q.cat) && !cs.includes(q.cat));
+  const rest  = BANK.questions.filter(q=>!learned.includes(q.cat));
+  return shuffled(pool, rnd).concat(shuffled(extra, rnd)).concat(shuffled(rest, rnd)).slice(0, count);
 }
 
 // ---- 通用答题引擎 ----
