@@ -98,6 +98,7 @@ button{font:inherit;cursor:pointer;border:none;border-radius:8px;padding:12px 16
 .wk summary::-webkit-details-marker{display:none}
 .wk summary::before{content:"▸";color:var(--muted);font-size:12px;transition:transform .15s}
 .wk[open] summary::before{transform:rotate(90deg)}
+.wk summary .wno{white-space:nowrap;flex-shrink:0}
 .wk summary .rng{color:var(--muted);font-weight:400;font-size:12.5px;font-variant-numeric:tabular-nums}
 .drow{display:flex;gap:9px;padding:4px 0 4px 20px;font-size:13.5px;font-variant-numeric:tabular-nums;flex-wrap:wrap}
 .drow.rest{color:var(--muted)}
@@ -525,7 +526,7 @@ function renderSched(){
     if (!dl.length) continue;
     const open = inRange && curWeek===w ? " open" : "";
     const rng = dl[0].key.replace("-","/") + "–" + dl[dl.length-1].key.replace("-","/");
-    h += `<details class="wk"${open}><summary>第${w}周 <span class="rng">${rng} · ${themeName(w)}</span></summary>`;
+    h += `<details class="wk"${open}><summary><span class="wno">第${w}周</span><span class="rng">${rng} · ${themeName(w)}</span></summary>`;
     dl.forEach(r=>{
       const isToday = inRange && r.n===dayNo;
       const dr = store.get("r:"+r.key), er = store.get("e:"+r.key);
