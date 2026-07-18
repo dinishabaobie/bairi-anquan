@@ -1,0 +1,507 @@
+<title>百日安全</title>
+<style>
+:root{
+  --bg:#F4F3EE; --card:#FFFFFF; --ink:#23272C; --muted:#75716A; --line:#E3E0D8;
+  --accent:#F5B301; --accent-ink:#231F10; --plate:#23272C; --plate-ink:#F4F3EE;
+  --good:#2E7D46; --good-bg:#E8F3EC; --bad:#C0442E; --bad-bg:#F9ECE9;
+  --sel:#FBF3DA; --sel-line:#E0B93F;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#15171A; --card:#1E2126; --ink:#E9E7E1; --muted:#9A968D; --line:#33373D;
+  --accent:#E9B123; --accent-ink:#231F10; --plate:#101214; --plate-ink:#E9E7E1;
+  --good:#5CB878; --good-bg:#1E2E24; --bad:#E07B62; --bad-bg:#33211C;
+  --sel:#33301F; --sel-line:#8A7524;
+}}
+:root[data-theme="light"]{
+  --bg:#F4F3EE; --card:#FFFFFF; --ink:#23272C; --muted:#75716A; --line:#E3E0D8;
+  --accent:#F5B301; --accent-ink:#231F10; --plate:#23272C; --plate-ink:#F4F3EE;
+  --good:#2E7D46; --good-bg:#E8F3EC; --bad:#C0442E; --bad-bg:#F9ECE9;
+  --sel:#FBF3DA; --sel-line:#E0B93F;
+}
+:root[data-theme="dark"]{
+  --bg:#15171A; --card:#1E2126; --ink:#E9E7E1; --muted:#9A968D; --line:#33373D;
+  --accent:#E9B123; --accent-ink:#231F10; --plate:#101214; --plate-ink:#E9E7E1;
+  --good:#5CB878; --good-bg:#1E2E24; --bad:#E07B62; --bad-bg:#33211C;
+  --sel:#33301F; --sel-line:#8A7524;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:16px;line-height:1.6}
+.stripe{height:8px;background:repeating-linear-gradient(-45deg,var(--accent) 0 12px,var(--plate) 12px 24px)}
+header{background:var(--plate);color:var(--plate-ink)}
+.hd-in{max-width:640px;margin:0 auto;padding:18px 20px 16px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+h1{margin:0;font-size:26px;letter-spacing:.14em}
+.dates{font-size:13px;opacity:.7;font-variant-numeric:tabular-nums}
+main{max-width:640px;margin:0 auto;padding:14px 12px 60px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+details.card{padding:0}
+details.card>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;
+  padding:14px 16px;font-size:16px;font-weight:700}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::before{content:"▸";color:var(--muted);font-size:14px;transition:transform .15s}
+details.card[open]>summary::before{transform:rotate(90deg)}
+details.card>.body{padding:2px 16px 16px;border-top:1px solid var(--line)}
+.chip{margin-left:auto;font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.chip.todo{background:var(--sel);color:var(--ink);border:1px solid var(--sel-line)}
+.chip.ok{background:var(--good-bg);color:var(--good)}
+.chip.no{background:var(--bad-bg);color:var(--bad)}
+.chip.mute{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.big{font-size:24px;font-weight:800;margin:0}
+.big .sub{font-size:14px;font-weight:400}
+.sub{color:var(--muted);font-size:14px}
+.theme-tag{display:inline-block;background:var(--accent);color:var(--accent-ink);
+  font-size:13px;font-weight:700;padding:2px 10px;border-radius:4px;margin-top:8px}
+.bar{height:7px;background:var(--line);border-radius:4px;margin:10px 0 2px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.tasks{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.tasks li{display:flex;gap:9px;align-items:baseline;font-size:15px}
+.tasks .st{margin-left:auto;font-size:13px;font-weight:700;white-space:nowrap}
+.tasks .st.ok{color:var(--good)} .tasks .st.todo{color:var(--muted)}
+.tasks .dot{color:var(--accent);font-weight:800}
+button{font:inherit;cursor:pointer;border:none;border-radius:8px;padding:12px 16px;font-weight:700}
+.btn-main{background:var(--accent);color:var(--accent-ink);width:100%;font-size:16px;margin-top:12px}
+.btn-ghost{background:none;border:1.5px solid var(--line);color:var(--ink);width:100%;margin-top:10px}
+.btn-main:active,.btn-ghost:active{transform:translateY(1px)}
+.namebox{display:flex;gap:8px;margin-top:12px}
+.namebox input,.namebox select{flex:1;font:inherit;padding:10px 12px;border:1.5px solid var(--line);
+  border-radius:8px;background:var(--bg);color:var(--ink);min-width:0}
+.q{border-top:1px solid var(--line);padding:14px 0 4px}
+.q:first-child{border-top:none;padding-top:8px}
+.q-head{font-size:13px;color:var(--muted);margin-bottom:4px}
+.q-head b{color:var(--accent-ink);background:var(--accent);border-radius:3px;padding:0 6px;margin-right:6px;font-size:12px}
+.q-stem{font-weight:600;margin-bottom:10px}
+.opts{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
+.opt{border:1.5px solid var(--line);border-radius:8px;padding:9px 12px;cursor:pointer;font-size:15px;
+  background:var(--card);color:var(--ink);text-align:left;font-weight:400;display:flex;gap:8px}
+.opt .k{font-weight:700;min-width:1.2em}
+.opt.on{background:var(--sel);border-color:var(--sel-line)}
+.opt.hit{background:var(--good-bg);border-color:var(--good)}
+.opt.miss{background:var(--bad-bg);border-color:var(--bad)}
+.verdict{font-size:14px;font-weight:700;margin:0 0 8px}
+.verdict.ok{color:var(--good)} .verdict.no{color:var(--bad)}
+.score-line{font-size:22px;font-weight:800;margin:10px 0 0}
+.copybox{background:var(--bg);border:1px dashed var(--line);border-radius:8px;padding:10px 12px;
+  font-size:14px;margin-top:12px;word-break:break-all}
+.wk{border-top:1px solid var(--line)}
+.wk:first-of-type{border-top:none}
+.wk summary{cursor:pointer;padding:9px 0;font-weight:600;font-size:14.5px;list-style:none;display:flex;gap:8px;align-items:baseline}
+.wk summary::-webkit-details-marker{display:none}
+.wk summary::before{content:"▸";color:var(--muted);font-size:12px;transition:transform .15s}
+.wk[open] summary::before{transform:rotate(90deg)}
+.wk summary .rng{color:var(--muted);font-weight:400;font-size:12.5px;font-variant-numeric:tabular-nums}
+.drow{display:flex;gap:9px;padding:4px 0 4px 20px;font-size:13.5px;font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.drow.rest{color:var(--muted)}
+.drow .dn{min-width:4.2em;color:var(--muted)}
+.drow .dd{min-width:6em}
+.drow.today-row{background:var(--sel);border-radius:6px}
+.drow .done{color:var(--good);font-weight:700;margin-left:auto}
+.sq{border-top:1px solid var(--line)}
+.sq:first-of-type{border-top:none}
+.sq summary{cursor:pointer;padding:9px 0;font-size:14.5px;font-weight:600;list-style:none}
+.sq .ans{color:var(--muted);font-size:14px;padding:0 0 10px}
+.wrong-item{border-top:1px solid var(--line);padding:10px 0;font-size:14.5px}
+.wrong-item:first-child{border-top:none}
+.wrong-item .wa{color:var(--good);font-weight:700;font-size:13.5px}
+.note{font-size:13px;color:var(--muted);margin-top:10px}
+a{color:inherit}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+button:focus-visible,.opt:focus-visible,summary:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+</style>
+
+<header>
+  <div class="stripe"></div>
+  <div class="hd-in"><h1>百日安全</h1><div class="dates">2026.07.20 — 10.27 · 100 天</div></div>
+  <div class="stripe"></div>
+</header>
+
+<main>
+  <section class="card" id="today"></section>
+  <details class="card" id="dqCard" open>
+    <summary>每日 5 题<span class="chip" id="dqChip"></span></summary>
+    <div class="body" id="dqBody"></div>
+  </details>
+  <details class="card" id="exCard" hidden>
+    <summary id="exTitle">周考<span class="chip" id="exChip"></span></summary>
+    <div class="body" id="exBody"></div>
+  </details>
+  <details class="card" id="wrCard">
+    <summary>本周错题<span class="chip" id="wrChip"></span></summary>
+    <div class="body" id="wrBody"></div>
+  </details>
+  <details class="card" id="sqCard">
+    <summary>本周简答 · 班前会提问用</summary>
+    <div class="body" id="sqBody"></div>
+  </details>
+  <details class="card" id="scCard">
+    <summary>逐日安排</summary>
+    <div class="body"><div id="schedList"></div>
+      <p class="note">周六日及节假日(中秋 9/25–27、国庆 10/1–7)休息,计入 100 天。✓ 为本机已完成记录。</p>
+    </div>
+  </details>
+</main>
+
+<script>
+"use strict";
+/* ====== 可改配置 ====== */
+const NAMES = [];            // 填入13人名单变成下拉选择,如 ["张三","李四"]
+const VIDEO_LINKS = {};      // 每周警示视频链接,如 {1:"https://..."}
+/* ===================== */
+
+const BANK = {"cats": {"1": "高温防暑与职业健康", "2": "设备检维修与机械工具安全", "3": "电气与临时用电安全", "4": "消防、动火与易燃物管理", "5": "高处作业安全", "6": "有限空间作业", "7": "防汛、防雷与极端天气", "8": "应急救援与疏散", "9": "作业行为与劳动防护", "10": "综合安全管理与隐患治理"}, "questions": [{"type": "判断", "num": "01", "cat": 1, "q": "夏季高温可以不佩戴部分劳保用品，方便作业。（ ）", "ans": "×", "id": "判断-01"}, {"type": "判断", "num": "12", "cat": 1, "q": "夏季高温作业应合理轮岗、错峰施工。（ ）", "ans": "√", "id": "判断-12"}, {"type": "判断", "num": "21", "cat": 1, "q": "中暑轻症无需处理，继续干活即可。（ ）", "ans": "×", "id": "判断-21"}, {"type": "单选", "num": "01", "cat": 1, "q": "夏季高温作业人员出现头晕、乏力、恶心、大量出汗属于（ ）。", "opts": [{"k": "A", "t": "感冒"}, {"k": "B", "t": "中暑前兆"}, {"k": "C", "t": "中毒"}, {"k": "D", "t": "正常现象"}], "ans": "B", "id": "单选-01"}, {"type": "单选", "num": "04", "cat": 1, "q": "夏季正午高温时段，企业对露天重体力作业应（ ）。", "opts": [{"k": "A", "t": "正常作业"}, {"k": "B", "t": "错峰暂停、轮岗休息"}, {"k": "C", "t": "加快进度赶工"}, {"k": "D", "t": "减少劳保用品"}], "ans": "B", "id": "单选-04"}, {"type": "单选", "num": "11", "cat": 1, "q": "高温天气是指日最高气温达到（ ）℃以上的天气。", "opts": [{"k": "A", "t": "30"}, {"k": "B", "t": "32"}, {"k": "C", "t": "35"}, {"k": "D", "t": "38"}], "ans": "C", "id": "单选-11"}, {"type": "单选", "num": "12", "cat": 1, "q": "企业高温作业，下列哪项不属于防暑措施（ ）。", "opts": [{"k": "A", "t": "发放防暑药品"}, {"k": "B", "t": "错峰作业"}, {"k": "C", "t": "超负荷连续作业"}, {"k": "D", "t": "加强通风降温"}], "ans": "C", "id": "单选-12"}, {"type": "单选", "num": "23", "cat": 1, "q": "发生中暑严重昏迷，应立即（ ）并送医。", "opts": [{"k": "A", "t": "转移阴凉通风处、物理降温"}, {"k": "B", "t": "喂大量热水"}, {"k": "C", "t": "原地不动"}, {"k": "D", "t": "摇晃患者"}], "ans": "A", "id": "单选-23"}, {"type": "单选", "num": "31", "cat": 1, "q": "高温作业人员连续工作不宜超过（ ）小时，应轮换休息。", "opts": [{"k": "A", "t": "1"}, {"k": "B", "t": "2-4"}, {"k": "C", "t": "8"}, {"k": "D", "t": "10"}], "ans": "B", "id": "单选-31"}, {"type": "单选", "num": "52", "cat": 1, "q": "高温天气作业出现热射病属于（ ）。", "opts": [{"k": "A", "t": "轻微不适"}, {"k": "B", "t": "重度中暑、危及生命"}, {"k": "C", "t": "普通中暑"}, {"k": "D", "t": "正常现象"}], "ans": "B", "id": "单选-52"}, {"type": "多选", "num": "03", "cat": 1, "q": "夏季防暑降温措施有（ ）。", "opts": [{"k": "A", "t": "错峰作业"}, {"k": "B", "t": "通风降温"}, {"k": "C", "t": "发放防暑药品物资"}, {"k": "D", "t": "轮岗休息"}, {"k": "E", "t": "严禁超时高温作业"}], "ans": "ABCDE", "id": "多选-03"}, {"type": "多选", "num": "17", "cat": 1, "q": "中暑应急处置措施有（ ）。", "opts": [{"k": "A", "t": "转移阴凉通风处"}, {"k": "B", "t": "解开衣物物理降温"}, {"k": "C", "t": "补充淡盐水"}, {"k": "D", "t": "重症立即送医"}], "ans": "ABCD", "id": "多选-17"}, {"type": "判断", "num": "02", "cat": 2, "q": "设备维修必须严格执行停机挂牌上锁制度。（ ）", "ans": "√", "id": "判断-02"}, {"type": "判断", "num": "13", "cat": 2, "q": "手持电动工具绝缘破损可以继续使用。（ ）", "ans": "×", "id": "判断-13"}, {"type": "判断", "num": "17", "cat": 2, "q": "设备可以带故障、带温、带压运行作业。（ ）", "ans": "×", "id": "判断-17"}, {"type": "判断", "num": "27", "cat": 2, "q": "设备开机前必须确认现场人员、工具全部撤离清场。（ ）", "ans": "√", "id": "判断-27"}, {"type": "单选", "num": "02", "cat": 2, "q": "设备维修作业必须执行的首要安全制度是（ ）。", "opts": [{"k": "A", "t": "专人监护"}, {"k": "B", "t": "停机挂牌上锁"}, {"k": "C", "t": "佩戴手套"}, {"k": "D", "t": "清理现场"}], "ans": "B", "id": "单选-02"}, {"type": "单选", "num": "05", "cat": 2, "q": "手持电动工具维修、使用前必须检查（ ）。", "opts": [{"k": "A", "t": "工具新旧"}, {"k": "B", "t": "电源线、绝缘、接地情况"}, {"k": "C", "t": "外观整洁度"}, {"k": "D", "t": "工具重量"}], "ans": "B", "id": "单选-05"}, {"type": "单选", "num": "08", "cat": 2, "q": "设备检修严禁（ ）作业。", "opts": [{"k": "A", "t": "停机后"}, {"k": "B", "t": "带电、带温、带压"}, {"k": "C", "t": "挂牌后"}, {"k": "D", "t": "验电后"}], "ans": "B", "id": "单选-08"}, {"type": "单选", "num": "19", "cat": 2, "q": "设备停机检修后，开机前必须（ ）。", "opts": [{"k": "A", "t": "直接开机"}, {"k": "B", "t": "确认人员撤离、工具清场、解除锁定"}, {"k": "C", "t": "简单查看"}, {"k": "D", "t": "等待十分钟"}], "ans": "B", "id": "单选-19"}, {"type": "单选", "num": "22", "cat": 2, "q": "维修作业现场完工后应（ ）。", "opts": [{"k": "A", "t": "工具随意摆放"}, {"k": "B", "t": "清理现场、恢复安全状态"}, {"k": "C", "t": "遗留杂物"}, {"k": "D", "t": "不检查直接离场"}], "ans": "B", "id": "单选-22"}, {"type": "单选", "num": "26", "cat": 2, "q": "夏季设备高温运行，应重点检查（ ）。", "opts": [{"k": "A", "t": "设备外观"}, {"k": "B", "t": "温度、散热、电机负荷、线路发热"}, {"k": "C", "t": "设备年限"}, {"k": "D", "t": "设备标识"}], "ans": "B", "id": "单选-26"}, {"type": "单选", "num": "36", "cat": 2, "q": "机修作业使用打磨机具必须佩戴（ ）。", "opts": [{"k": "A", "t": "护目镜、防护面罩"}, {"k": "B", "t": "普通口罩"}, {"k": "C", "t": "无需防护"}, {"k": "D", "t": "帽子"}], "ans": "A", "id": "单选-36"}, {"type": "单选", "num": "37", "cat": 2, "q": "设备带故障运行属于（ ）。", "opts": [{"k": "A", "t": "正常操作"}, {"k": "B", "t": "违章作业"}, {"k": "C", "t": "合规操作"}, {"k": "D", "t": "临时操作"}], "ans": "B", "id": "单选-37"}, {"type": "单选", "num": "48", "cat": 2, "q": "夏季设备散热不良最易导致（ ）。", "opts": [{"k": "A", "t": "设备提速"}, {"k": "B", "t": "电机烧毁、起火跳闸"}, {"k": "C", "t": "无影响"}, {"k": "D", "t": "设备静音"}], "ans": "B", "id": "单选-48"}, {"type": "单选", "num": "51", "cat": 2, "q": "设备挂牌上锁的目的是（ ）。", "opts": [{"k": "A", "t": "美观好看"}, {"k": "B", "t": "防止误合闸、误启动伤人"}, {"k": "C", "t": "标识设备"}, {"k": "D", "t": "方便管理"}], "ans": "B", "id": "单选-51"}, {"type": "单选", "num": "54", "cat": 2, "q": "维修工具使用前检查重点是（ ）。", "opts": [{"k": "A", "t": "新旧程度"}, {"k": "B", "t": "绝缘、完好、无破损变形"}, {"k": "C", "t": "价格"}, {"k": "D", "t": "品牌"}], "ans": "B", "id": "单选-54"}, {"type": "单选", "num": "57", "cat": 2, "q": "夜间维修作业必须保证（ ）。", "opts": [{"k": "A", "t": "灯光充足、专人监护"}, {"k": "B", "t": "摸黑作业"}, {"k": "C", "t": "单人作业"}, {"k": "D", "t": "简化流程"}], "ans": "A", "id": "单选-57"}, {"type": "多选", "num": "02", "cat": 2, "q": "设备维修作业安全流程包含（ ）。", "opts": [{"k": "A", "t": "停机"}, {"k": "B", "t": "挂牌上锁"}, {"k": "C", "t": "验电确认"}, {"k": "D", "t": "作业监护"}, {"k": "E", "t": "完工清场、解除锁定"}], "ans": "ABCDE", "id": "多选-02"}, {"type": "多选", "num": "15", "cat": 2, "q": "设备高温异常现象有（ ）。", "opts": [{"k": "A", "t": "机身发烫"}, {"k": "B", "t": "电机异响"}, {"k": "C", "t": "线路发热"}, {"k": "D", "t": "跳闸频繁"}, {"k": "E", "t": "异味冒烟"}], "ans": "ABCDE", "id": "多选-15"}, {"type": "多选", "num": "24", "cat": 2, "q": "设备开机前检查内容（ ）。", "opts": [{"k": "A", "t": "人员撤离"}, {"k": "B", "t": "工具清场"}, {"k": "C", "t": "防护完好"}, {"k": "D", "t": "线路正常"}, {"k": "E", "t": "无异常杂物"}], "ans": "ABCDE", "id": "多选-24"}, {"type": "判断", "num": "03", "cat": 3, "q": "发生触电事故可以直接用手拉扯伤者。（ ）", "ans": "×", "id": "判断-03"}, {"type": "判断", "num": "22", "cat": 3, "q": "临时用电完工后必须及时断电拆除。（ ）", "ans": "√", "id": "判断-22"}, {"type": "判断", "num": "24", "cat": 3, "q": "配电箱周边可以堆放杂物、遮挡覆盖。（ ）", "ans": "×", "id": "判断-24"}, {"type": "判断", "num": "28", "cat": 3, "q": "潮湿环境更容易发生触电漏电事故。（ ）", "ans": "√", "id": "判断-28"}, {"type": "单选", "num": "03", "cat": 3, "q": "发生人员触电事故，第一步正确操作是（ ）。", "opts": [{"k": "A", "t": "直接拉开触电人员"}, {"k": "B", "t": "迅速切断电源"}, {"k": "C", "t": "拨打120"}, {"k": "D", "t": "进行心肺复苏"}], "ans": "B", "id": "单选-03"}, {"type": "单选", "num": "13", "cat": 3, "q": "发现电气线路老化、破皮应（ ）。", "opts": [{"k": "A", "t": "继续使用"}, {"k": "B", "t": "自行缠绕胶布凑合使用"}, {"k": "C", "t": "立即停用报修"}, {"k": "D", "t": "不予理会"}], "ans": "C", "id": "单选-13"}, {"type": "单选", "num": "16", "cat": 3, "q": "临时用电线路架设规范要求（ ）。", "opts": [{"k": "A", "t": "随地拖拉、缠绕设备"}, {"k": "B", "t": "架空、固定、无破损"}, {"k": "C", "t": "随意搭接"}, {"k": "D", "t": "私拉乱接"}], "ans": "B", "id": "单选-16"}, {"type": "单选", "num": "33", "cat": 3, "q": "配电柜、配电箱周边（ ）米内禁止堆放杂物。", "opts": [{"k": "A", "t": "0.5"}, {"k": "B", "t": "1"}, {"k": "C", "t": "1.5"}, {"k": "D", "t": "2"}], "ans": "B", "id": "单选-33"}, {"type": "单选", "num": "38", "cat": 3, "q": "夏季潮湿环境最易引发的事故是（ ）。", "opts": [{"k": "A", "t": "坍塌"}, {"k": "B", "t": "触电漏电"}, {"k": "C", "t": "中毒"}, {"k": "D", "t": "爆炸"}], "ans": "B", "id": "单选-38"}, {"type": "单选", "num": "44", "cat": 3, "q": "厂区临时施工完毕后，必须（ ）临时用电。", "opts": [{"k": "A", "t": "保留"}, {"k": "B", "t": "拆除断电"}, {"k": "C", "t": "闲置"}, {"k": "D", "t": "留给他人使用"}], "ans": "B", "id": "单选-44"}, {"type": "单选", "num": "58", "cat": 3, "q": "电气控制柜作业前必须（ ）。", "opts": [{"k": "A", "t": "直接开盖"}, {"k": "B", "t": "断电、验电、确认无电"}, {"k": "C", "t": "带电操作"}, {"k": "D", "t": "无需防护"}], "ans": "B", "id": "单选-58"}, {"type": "多选", "num": "05", "cat": 3, "q": "触电应急处置正确流程包含（ ）。", "opts": [{"k": "A", "t": "切断电源"}, {"k": "B", "t": "隔离伤者"}, {"k": "C", "t": "检查呼吸心跳"}, {"k": "D", "t": "必要时心肺复苏"}, {"k": "E", "t": "及时送医"}], "ans": "ABCDE", "id": "多选-05"}, {"type": "多选", "num": "09", "cat": 3, "q": "电气安全隐患包含（ ）。", "opts": [{"k": "A", "t": "线路老化破皮"}, {"k": "B", "t": "私拉乱接"}, {"k": "C", "t": "超负荷用电"}, {"k": "D", "t": "设备漏电"}, {"k": "E", "t": "配电箱堆放杂物"}], "ans": "ABCDE", "id": "多选-09"}, {"type": "多选", "num": "25", "cat": 3, "q": "临时用电作业要求（ ）。", "opts": [{"k": "A", "t": "审批登记"}, {"k": "B", "t": "规范架设"}, {"k": "C", "t": "专人管理"}, {"k": "D", "t": "完工拆除"}, {"k": "E", "t": "严禁私拉乱接"}], "ans": "ABCDE", "id": "多选-25"}, {"type": "判断", "num": "04", "cat": 4, "q": "消防通道可以临时堆放工具物料。（ ）", "ans": "×", "id": "判断-04"}, {"type": "判断", "num": "08", "cat": 4, "q": "电气火灾可以直接用水扑救。（ ）", "ans": "×", "id": "判断-08"}, {"type": "判断", "num": "11", "cat": 4, "q": "动火作业结束后无需检查余火即可离场。（ ）", "ans": "×", "id": "判断-11"}, {"type": "单选", "num": "06", "cat": 4, "q": "动火作业现场必须配备（ ）。", "opts": [{"k": "A", "t": "水桶"}, {"k": "B", "t": "有效灭火器材、监护人"}, {"k": "C", "t": "安全帽"}, {"k": "D", "t": "警示灯"}], "ans": "B", "id": "单选-06"}, {"type": "单选", "num": "09", "cat": 4, "q": "消防通道、安全出口应保持（ ）。", "opts": [{"k": "A", "t": "可临时堆放物品"}, {"k": "B", "t": "全程畅通无堵塞"}, {"k": "C", "t": "半封闭状态"}, {"k": "D", "t": "上锁关闭"}], "ans": "B", "id": "单选-09"}, {"type": "单选", "num": "17", "cat": 4, "q": "灭火器压力指针在（ ）区域代表正常可用。", "opts": [{"k": "A", "t": "红色"}, {"k": "B", "t": "黄色"}, {"k": "C", "t": "绿色"}, {"k": "D", "t": "白色"}], "ans": "C", "id": "单选-17"}, {"type": "单选", "num": "18", "cat": 4, "q": "初期火灾扑救最佳时间是起火后（ ）分钟内。", "opts": [{"k": "A", "t": "1-3"}, {"k": "B", "t": "10-15"}, {"k": "C", "t": "20"}, {"k": "D", "t": "30"}], "ans": "A", "id": "单选-18"}, {"type": "单选", "num": "24", "cat": 4, "q": "电气设备发生火灾，严禁使用（ ）灭火。", "opts": [{"k": "A", "t": "干粉灭火器"}, {"k": "B", "t": "水"}, {"k": "C", "t": "二氧化碳灭火器"}, {"k": "D", "t": "灭火毯"}], "ans": "B", "id": "单选-24"}, {"type": "单选", "num": "41", "cat": 4, "q": "动火作业结束后，必须留守观察（ ）分钟，确认无余火。", "opts": [{"k": "A", "t": "5"}, {"k": "B", "t": "10-30"}, {"k": "C", "t": "1"}, {"k": "D", "t": "0"}], "ans": "B", "id": "单选-41"}, {"type": "单选", "num": "46", "cat": 4, "q": "仓库易燃物料堆放应（ ）。", "opts": [{"k": "A", "t": "靠近电源、热源"}, {"k": "B", "t": "远离火源、电源、通风存放"}, {"k": "C", "t": "密集堆放"}, {"k": "D", "t": "堵塞通道"}], "ans": "B", "id": "单选-46"}, {"type": "单选", "num": "53", "cat": 4, "q": "车间消防栓前方（ ）米内禁止遮挡堆放。", "opts": [{"k": "A", "t": "1"}, {"k": "B", "t": "1.5"}, {"k": "C", "t": "2"}, {"k": "D", "t": "3"}], "ans": "A", "id": "单选-53"}, {"type": "多选", "num": "06", "cat": 4, "q": "动火作业必须落实的管控措施有（ ）。", "opts": [{"k": "A", "t": "作业审批"}, {"k": "B", "t": "清理周边可燃物"}, {"k": "C", "t": "专人监护"}, {"k": "D", "t": "配备灭火器材"}, {"k": "E", "t": "作业后查余火"}], "ans": "ABCDE", "id": "多选-06"}, {"type": "多选", "num": "10", "cat": 4, "q": "初期火灾扑救要点正确的是（ ）。", "opts": [{"k": "A", "t": "就近取用灭火器"}, {"k": "B", "t": "对准火焰根部喷射"}, {"k": "C", "t": "先断电再扑救电气火"}, {"k": "D", "t": "迅速报警、疏散人员"}], "ans": "ABCD", "id": "多选-10"}, {"type": "多选", "num": "26", "cat": 4, "q": "车间消防安全管理要求（ ）。", "opts": [{"k": "A", "t": "器材完好有效"}, {"k": "B", "t": "通道畅通"}, {"k": "C", "t": "无可燃杂物堆积"}, {"k": "D", "t": "动火严格审批"}], "ans": "ABCD", "id": "多选-26"}, {"type": "判断", "num": "07", "cat": 5, "q": "高处作业必须系好安全带、戴好安全帽。（ ）", "ans": "√", "id": "判断-07"}, {"type": "单选", "num": "14", "cat": 5, "q": "高空作业高度基准面（ ）米及以上属于高处作业。", "opts": [{"k": "A", "t": "1"}, {"k": "B", "t": "2"}, {"k": "C", "t": "3"}, {"k": "D", "t": "4"}], "ans": "B", "id": "单选-14"}, {"type": "单选", "num": "15", "cat": 5, "q": "高处作业必须正确佩戴（ ）。", "opts": [{"k": "A", "t": "口罩"}, {"k": "B", "t": "安全帽、安全带"}, {"k": "C", "t": "手套"}, {"k": "D", "t": "护目镜"}], "ans": "B", "id": "单选-15"}, {"type": "单选", "num": "32", "cat": 5, "q": "高空作业下方应设置（ ），禁止无关人员进入。", "opts": [{"k": "A", "t": "作业警戒区"}, {"k": "B", "t": "休息区"}, {"k": "C", "t": "物料区"}, {"k": "D", "t": "通行区"}], "ans": "A", "id": "单选-32"}, {"type": "多选", "num": "08", "cat": 5, "q": "高处作业防护要求包含（ ）。", "opts": [{"k": "A", "t": "佩戴安全帽安全带"}, {"k": "B", "t": "设置警戒区"}, {"k": "C", "t": "工具防坠落"}, {"k": "D", "t": "严禁抛物"}, {"k": "E", "t": "恶劣天气停止作业"}], "ans": "ABCDE", "id": "多选-08"}, {"type": "判断", "num": "15", "cat": 6, "q": "有限空间作业无需通风检测即可进入。（ ）", "ans": "×", "id": "判断-15"}, {"type": "单选", "num": "10", "cat": 6, "q": "有限空间作业最首要防范的风险是（ ）。", "opts": [{"k": "A", "t": "高温"}, {"k": "B", "t": "缺氧、中毒窒息"}, {"k": "C", "t": "噪音"}, {"k": "D", "t": "粉尘"}], "ans": "B", "id": "单选-10"}, {"type": "单选", "num": "28", "cat": 6, "q": "有限空间作业必须实行（ ）制度。", "opts": [{"k": "A", "t": "无人监护"}, {"k": "B", "t": "先通风、再检测、后作业"}, {"k": "C", "t": "直接作业"}, {"k": "D", "t": "随意进出"}], "ans": "B", "id": "单选-28"}, {"type": "多选", "num": "11", "cat": 6, "q": "有限空间作业风险包含（ ）。", "opts": [{"k": "A", "t": "缺氧窒息"}, {"k": "B", "t": "有毒有害气体中毒"}, {"k": "C", "t": "火灾爆炸"}, {"k": "D", "t": "高温闷热"}], "ans": "ABCD", "id": "多选-11"}, {"type": "判断", "num": "05", "cat": 7, "q": "雷雨天气应立即停止室外一切作业。（ ）", "ans": "√", "id": "判断-05"}, {"type": "判断", "num": "18", "cat": 7, "q": "汛期应提前疏通厂区排水系统。（ ）", "ans": "√", "id": "判断-18"}, {"type": "单选", "num": "07", "cat": 7, "q": "雷雨天气，厂区室外设备、高空作业应（ ）。", "opts": [{"k": "A", "t": "继续作业"}, {"k": "B", "t": "加快作业进度"}, {"k": "C", "t": "立即停止作业"}, {"k": "D", "t": "视情况作业"}], "ans": "C", "id": "单选-07"}, {"type": "单选", "num": "20", "cat": 7, "q": "夏季汛期重点排查（ ）防止厂区内涝。", "opts": [{"k": "A", "t": "门窗"}, {"k": "B", "t": "排水管道、低洼积水区域"}, {"k": "C", "t": "办公桌椅"}, {"k": "D", "t": "监控设备"}], "ans": "B", "id": "单选-20"}, {"type": "单选", "num": "34", "cat": 7, "q": "雷雨天气可以进行的作业是（ ）。", "opts": [{"k": "A", "t": "室外高空作业"}, {"k": "B", "t": "室内设备巡检"}, {"k": "C", "t": "露天动火"}, {"k": "D", "t": "室外吊装"}], "ans": "B", "id": "单选-34"}, {"type": "单选", "num": "42", "cat": 7, "q": "防汛物资不包括（ ）。", "opts": [{"k": "A", "t": "沙袋、水泵"}, {"k": "B", "t": "防水篷布"}, {"k": "C", "t": "应急灯"}, {"k": "D", "t": "易燃易爆品"}], "ans": "D", "id": "单选-42"}, {"type": "单选", "num": "55", "cat": 7, "q": "极端暴雨天气应落实（ ）。", "opts": [{"k": "A", "t": "继续户外作业"}, {"k": "B", "t": "停工避险、巡查排水"}, {"k": "C", "t": "加快生产"}, {"k": "D", "t": "无所谓"}], "ans": "B", "id": "单选-55"}, {"type": "多选", "num": "07", "cat": 7, "q": "汛期安全防控重点有（ ）。", "opts": [{"k": "A", "t": "疏通排水"}, {"k": "B", "t": "排查低洼积水"}, {"k": "C", "t": "加固临时设施"}, {"k": "D", "t": "储备防汛物资"}, {"k": "E", "t": "极端天气停工避险"}], "ans": "ABCDE", "id": "多选-07"}, {"type": "多选", "num": "21", "cat": 7, "q": "夏季雷雨天气作业禁忌（ ）。", "opts": [{"k": "A", "t": "室外高空作业"}, {"k": "B", "t": "露天动火"}, {"k": "C", "t": "大型吊装"}, {"k": "D", "t": "电气室外检修"}], "ans": "ABCD", "id": "多选-21"}, {"type": "判断", "num": "25", "cat": 8, "q": "应急演练可以有效提升员工处置能力。（ ）", "ans": "√", "id": "判断-25"}, {"type": "单选", "num": "39", "cat": 8, "q": "应急疏散时应（ ）。", "opts": [{"k": "A", "t": "乘坐电梯"}, {"k": "B", "t": "有序走安全通道、不拥挤踩踏"}, {"k": "C", "t": "贪恋财物"}, {"k": "D", "t": "乱跑乱窜"}], "ans": "B", "id": "单选-39"}, {"type": "单选", "num": "45", "cat": 8, "q": "心肺复苏操作首要步骤是（ ）。", "opts": [{"k": "A", "t": "人工呼吸"}, {"k": "B", "t": "胸外按压"}, {"k": "C", "t": "判断意识、呼救、开放气道"}, {"k": "D", "t": "喂水"}], "ans": "C", "id": "单选-45"}, {"type": "多选", "num": "18", "cat": 8, "q": "应急演练的作用有（ ）。", "opts": [{"k": "A", "t": "熟练应急流程"}, {"k": "B", "t": "提升自救互救能力"}, {"k": "C", "t": "检验器材有效性"}, {"k": "D", "t": "锻炼应急队伍"}], "ans": "ABCD", "id": "多选-18"}, {"type": "判断", "num": "10", "cat": 9, "q": "带病、疲劳、酒后可以上岗作业。（ ）", "ans": "×", "id": "判断-10"}, {"type": "判断", "num": "20", "cat": 9, "q": "特种作业无证人员可以临时操作特种设备。（ ）", "ans": "×", "id": "判断-20"}, {"type": "单选", "num": "21", "cat": 9, "q": "作业人员严禁（ ）上岗作业。", "opts": [{"k": "A", "t": "穿工作服"}, {"k": "B", "t": "酒后、疲劳"}, {"k": "C", "t": "佩戴劳保"}, {"k": "D", "t": "签到后"}], "ans": "B", "id": "单选-21"}, {"type": "单选", "num": "25", "cat": 9, "q": "特种作业人员必须（ ）方可上岗。", "opts": [{"k": "A", "t": "自愿上岗"}, {"k": "B", "t": "持证上岗"}, {"k": "C", "t": "熟悉即可"}, {"k": "D", "t": "老员工可无证"}], "ans": "B", "id": "单选-25"}, {"type": "单选", "num": "27", "cat": 9, "q": "作业安全“三违”不包括（ ）。", "opts": [{"k": "A", "t": "违章指挥"}, {"k": "B", "t": "违章作业"}, {"k": "C", "t": "违反劳动纪律"}, {"k": "D", "t": "规范操作"}], "ans": "D", "id": "单选-27"}, {"type": "单选", "num": "43", "cat": 9, "q": "作业人员劳保用品应（ ）佩戴。", "opts": [{"k": "A", "t": "按需"}, {"k": "B", "t": "全程规范"}, {"k": "C", "t": "偶尔"}, {"k": "D", "t": "高温可不戴"}], "ans": "B", "id": "单选-43"}, {"type": "单选", "num": "49", "cat": 9, "q": "发现他人违章作业应（ ）。", "opts": [{"k": "A", "t": "视而不见"}, {"k": "B", "t": "及时制止、提醒上报"}, {"k": "C", "t": "跟随违章"}, {"k": "D", "t": "拍照看热闹"}], "ans": "B", "id": "单选-49"}, {"type": "多选", "num": "04", "cat": 9, "q": "属于“三违”行为的是（ ）。", "opts": [{"k": "A", "t": "违章指挥"}, {"k": "B", "t": "违章作业"}, {"k": "C", "t": "违反劳动纪律"}, {"k": "D", "t": "规范操作"}], "ans": "ABC", "id": "多选-04"}, {"type": "多选", "num": "13", "cat": 9, "q": "机修作业必须佩戴的劳保用品有（ ）。", "opts": [{"k": "A", "t": "工作服"}, {"k": "B", "t": "劳保鞋"}, {"k": "C", "t": "防护手套"}, {"k": "D", "t": "护目镜"}, {"k": "E", "t": "安全帽"}], "ans": "ABCDE", "id": "多选-13"}, {"type": "多选", "num": "14", "cat": 9, "q": "属于安全禁止行为的有（ ）。", "opts": [{"k": "A", "t": "带电维修设备"}, {"k": "B", "t": "酒后上岗"}, {"k": "C", "t": "高空抛物"}, {"k": "D", "t": "堵塞消防通道"}, {"k": "E", "t": "无证特种作业"}], "ans": "ABCDE", "id": "多选-14"}, {"type": "多选", "num": "27", "cat": 9, "q": "疲劳作业危害包含（ ）。", "opts": [{"k": "A", "t": "注意力下降"}, {"k": "B", "t": "操作失误"}, {"k": "C", "t": "引发事故"}, {"k": "D", "t": "反应迟缓"}], "ans": "ABCD", "id": "多选-27"}, {"type": "多选", "num": "29", "cat": 9, "q": "制造维修岗位高频风险有（ ）。", "opts": [{"k": "A", "t": "机械伤害"}, {"k": "B", "t": "触电"}, {"k": "C", "t": "高空坠落"}, {"k": "D", "t": "中暑"}, {"k": "E", "t": "火灾"}], "ans": "ABCDE", "id": "多选-29"}, {"type": "判断", "num": "06", "cat": 10, "q": "轻微隐患可以不整改，不用记录。（ ）", "ans": "×", "id": "判断-06"}, {"type": "判断", "num": "09", "cat": 10, "q": "百日安全答题、考试全员必须参与。（ ）", "ans": "√", "id": "判断-09"}, {"type": "判断", "num": "14", "cat": 10, "q": "隐患排查必须做到闭环整改、复查销号。（ ）", "ans": "√", "id": "判断-14"}, {"type": "判断", "num": "16", "cat": 10, "q": "发现违章行为应及时制止上报。（ ）", "ans": "√", "id": "判断-16"}, {"type": "判断", "num": "19", "cat": 10, "q": "安全竞赛目的是为了以赛促学、提升技能。（ ）", "ans": "√", "id": "判断-19"}, {"type": "判断", "num": "23", "cat": 10, "q": "班组每日班前会必须开展安全交底。（ ）", "ans": "√", "id": "判断-23"}, {"type": "判断", "num": "26", "cat": 10, "q": "百日安全活动只需要安全员参与即可。（ ）", "ans": "×", "id": "判断-26"}, {"type": "判断", "num": "29", "cat": 10, "q": "所有安全活动资料不需要留存归档。（ ）", "ans": "×", "id": "判断-29"}, {"type": "判断", "num": "30", "cat": 10, "q": "安全生产人人有责，一岗一责。（ ）", "ans": "√", "id": "判断-30"}, {"type": "单选", "num": "29", "cat": 10, "q": "企业安全生产的第一责任人是（ ）。", "opts": [{"k": "A", "t": "安全员"}, {"k": "B", "t": "部门主管"}, {"k": "C", "t": "企业主要负责人"}, {"k": "D", "t": "班组长"}], "ans": "C", "id": "单选-29"}, {"type": "单选", "num": "30", "cat": 10, "q": "发现重大安全隐患应（ ）。", "opts": [{"k": "A", "t": "隐瞒不报"}, {"k": "B", "t": "立即上报、停工整改"}, {"k": "C", "t": "自行忽略"}, {"k": "D", "t": "等待事故发生"}], "ans": "B", "id": "单选-30"}, {"type": "单选", "num": "35", "cat": 10, "q": "安全隐患整改的原则是（ ）。", "opts": [{"k": "A", "t": "等一等、看一看"}, {"k": "B", "t": "立即整改、闭环销号"}, {"k": "C", "t": "拖延整改"}, {"k": "D", "t": "口头整改"}], "ans": "B", "id": "单选-35"}, {"type": "单选", "num": "40", "cat": 10, "q": "安全打卡、考试不合格人员应（ ）。", "opts": [{"k": "A", "t": "无需处理"}, {"k": "B", "t": "专项再培训、补考"}, {"k": "C", "t": "直接上岗"}, {"k": "D", "t": "放弃学习"}], "ans": "B", "id": "单选-40"}, {"type": "单选", "num": "47", "cat": 10, "q": "班组每日安全管理重点是（ ）。", "opts": [{"k": "A", "t": "班前交底、现场巡查、隐患自查"}, {"k": "B", "t": "只抓产量"}, {"k": "C", "t": "无需检查"}, {"k": "D", "t": "随意作业"}], "ans": "A", "id": "单选-47"}, {"type": "单选", "num": "50", "cat": 10, "q": "百日安全活动核心目的是（ ）。", "opts": [{"k": "A", "t": "应付检查"}, {"k": "B", "t": "排查隐患、杜绝事故、提升技能意识"}, {"k": "C", "t": "形式活动"}, {"k": "D", "t": "仅搞竞赛"}], "ans": "B", "id": "单选-50"}, {"type": "单选", "num": "56", "cat": 10, "q": "安全生产责任制要求（ ）。", "opts": [{"k": "A", "t": "人人有责、一岗一责"}, {"k": "B", "t": "只有安全员负责"}, {"k": "C", "t": "领导负责、员工无关"}, {"k": "D", "t": "部分岗位负责"}], "ans": "A", "id": "单选-56"}, {"type": "单选", "num": "59", "cat": 10, "q": "安全知识竞赛、答题目的是（ ）。", "opts": [{"k": "A", "t": "以赛促学、提升全员安全能力"}, {"k": "B", "t": "搞形式"}, {"k": "C", "t": "应付任务"}, {"k": "D", "t": "单纯比拼"}], "ans": "A", "id": "单选-59"}, {"type": "单选", "num": "60", "cat": 10, "q": "隐患闭环管理最后一步是（ ）。", "opts": [{"k": "A", "t": "发现隐患"}, {"k": "B", "t": "整改隐患"}, {"k": "C", "t": "复查销号"}, {"k": "D", "t": "记录隐患"}], "ans": "C", "id": "单选-60"}, {"type": "多选", "num": "01", "cat": 10, "q": "夏季安全生产“六防”包括（ ）。", "opts": [{"k": "A", "t": "防中暑"}, {"k": "B", "t": "防触电"}, {"k": "C", "t": "防火灾"}, {"k": "D", "t": "防设备故障"}, {"k": "E", "t": "防维修伤害 F、防汛灾害"}], "ans": "ABCDEF", "id": "多选-01"}, {"type": "多选", "num": "12", "cat": 10, "q": "百日安全活动包含哪些特色内容（ ）。", "opts": [{"k": "A", "t": "每日安全答题打卡"}, {"k": "B", "t": "每月安全统考"}, {"k": "C", "t": "安全技能竞赛"}, {"k": "D", "t": "应急演练"}, {"k": "E", "t": "隐患排查整治"}], "ans": "ABCDE", "id": "多选-12"}, {"type": "多选", "num": "16", "cat": 10, "q": "安全隐患排查四级机制包含（ ）。", "opts": [{"k": "A", "t": "员工自查"}, {"k": "B", "t": "班组日查"}, {"k": "C", "t": "部门周查"}, {"k": "D", "t": "公司月查"}], "ans": "ABCD", "id": "多选-16"}, {"type": "多选", "num": "19", "cat": 10, "q": "班组班前安全交底内容包含（ ）。", "opts": [{"k": "A", "t": "当日作业风险"}, {"k": "B", "t": "天气影响"}, {"k": "C", "t": "防护要点"}, {"k": "D", "t": "禁忌操作"}, {"k": "E", "t": "应急注意事项"}], "ans": "ABCDE", "id": "多选-19"}, {"type": "多选", "num": "20", "cat": 10, "q": "安全竞赛项目包含（ ）。", "opts": [{"k": "A", "t": "知识抢答"}, {"k": "B", "t": "维修实操"}, {"k": "C", "t": "触电急救"}, {"k": "D", "t": "消防比武"}, {"k": "E", "t": "隐患排查找茬"}], "ans": "ABCDE", "id": "多选-20"}, {"type": "多选", "num": "22", "cat": 10, "q": "安全生产工作要求（ ）。", "opts": [{"k": "A", "t": "全员参与"}, {"k": "B", "t": "全程管控"}, {"k": "C", "t": "全面排查"}, {"k": "D", "t": "闭环整改"}], "ans": "ABCD", "id": "多选-22"}, {"type": "多选", "num": "23", "cat": 10, "q": "可获评百日安全先进的条件有（ ）。", "opts": [{"k": "A", "t": "无违章无隐患"}, {"k": "B", "t": "答题积极成绩优异"}, {"k": "C", "t": "主动排查隐患"}, {"k": "D", "t": "竞赛表现优秀"}], "ans": "ABCD", "id": "多选-23"}, {"type": "多选", "num": "28", "cat": 10, "q": "安全资料留痕包含（ ）。", "opts": [{"k": "A", "t": "答题记录"}, {"k": "B", "t": "培训照片"}, {"k": "C", "t": "竞赛资料"}, {"k": "D", "t": "隐患台账"}, {"k": "E", "t": "演练记录"}], "ans": "ABCDE", "id": "多选-28"}, {"type": "多选", "num": "30", "cat": 10, "q": "企业安全保障措施包含（ ）。", "opts": [{"k": "A", "t": "组织保障"}, {"k": "B", "t": "物资经费"}, {"k": "C", "t": "宣传氛围"}, {"k": "D", "t": "考核督导"}], "ans": "ABCD", "id": "多选-30"}], "shortqs": {"1": [{"q": "夏季高温作业防暑主要措施有哪些？", "a": "错峰作业、轮岗休息、加强通风降温、配发防暑物资药品、严控连续作业时长、杜绝疲劳高温作业。"}], "2": [{"q": "简述设备维修作业“停机挂牌上锁”操作目的？", "a": "防止设备误合闸、误启动、误送电，杜绝维修过程机械伤害、触电事故，保障检修人员人身安全。"}], "3": [{"q": "触电事故应急处置四步骤是什么？", "a": "迅速切断电源、隔离危险区域、检查伤者状态、开展急救并及时送医上报。"}], "4": [{"q": "简述初期火灾正确扑救方法？", "a": "就近取用匹配灭火器材，对准火焰根部扫射扑救，优先切断电源、可燃物，同时报警、组织人员疏散。"}], "5": [{"q": "高处作业主要安全防护措施有哪些？", "a": "规范佩戴安全帽安全带、设置作业警戒区、工具防坠落、严禁抛物、恶劣天气停止高处作业、落实专人监护。"}], "6": [{"q": "有限空间作业“先通风、再检测、后作业”的意义？", "a": "提前排除缺氧、有毒有害气体风险，从源头杜绝窒息、中毒、爆炸事故，保障作业人员安全。"}], "7": [{"q": "夏季汛期安全防控重点工作有哪些？", "a": "疏通排水管网、排查低洼积水、加固临时设施、储备防汛物资、关注气象预警、极端天气停工避险、雨后隐患复查。"}], "9": [{"q": "什么是安全生产“三违”？", "a": "违章指挥、违章作业、违反劳动纪律。"}], "10": [{"q": "四级隐患排查机制具体指什么？", "a": "员工岗位自查、班组每日排查、部门每周专项排查、公司每月全面督查，实现隐患闭环清零。"}, {"q": "本次百日安全活动的核心目标是什么？", "a": "防夏季各类安全风险、全员学安全练技能、整治现场隐患、杜绝三违、实现百日零事故，建立长效安全管理机制。"}]}};
+const QMAP = {}; BANK.questions.forEach(q => QMAP[q.id] = q);
+const START = new Date(2026, 6, 20);
+const TOTAL = 100;
+const WEEK_CAT = {1:10, 2:2, 3:3, 4:4, 5:1, 6:9, 7:7, 8:5, 9:6, 10:8};
+const HOLIDAYS = {"09-25":"中秋","09-26":"中秋","09-27":"中秋","10-01":"国庆","10-02":"国庆",
+  "10-03":"国庆","10-04":"国庆","10-05":"国庆","10-06":"国庆","10-07":"国庆"};
+const MONTH_EXAMS = new Set(["07-30","08-27","09-24","10-22"]);  // 每月最后一个周四
+const EXAM_OVERRIDE = {11:"09-30"};                              // 第11周周四逢国庆,提前到周三
+const WD = ["周日","周一","周二","周三","周四","周五","周六"];
+
+function fmt(d){ return String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function dateOfDay(n){ const d = new Date(START); d.setDate(d.getDate()+n-1); return d; }
+function themeName(w){ return WEEK_CAT[w] ? BANK.cats[String(WEEK_CAT[w])] : "综合复习(全部题类)"; }
+
+// ---- 生成100天日程 ----
+const SCHED = [];
+for (let n=1; n<=TOTAL; n++){
+  const d = dateOfDay(n), week = Math.floor((n-1)/7)+1, key = fmt(d);
+  const rest = !!HOLIDAYS[key] || d.getDay()===0 || d.getDay()===6;
+  SCHED.push({n, d, week, key, rest, restwhy: HOLIDAYS[key] || "周末"});
+}
+const VIDEO_OF = {}, EXAM_OF = {};
+for (let w=1; w<=15; w++){
+  const wk = SCHED.filter(r=>r.week===w && !r.rest);
+  if (!wk.length) continue;
+  VIDEO_OF[w] = wk[0].key;
+  const thu = wk.find(r=>r.d.getDay()===4);
+  EXAM_OF[w] = thu ? thu.key : EXAM_OVERRIDE[w];
+}
+SCHED.forEach(r=>{
+  if (r.rest){ r.act = "休 · "+r.restwhy; return; }
+  const p = [];
+  if (VIDEO_OF[r.week]===r.key) p.push("看警示视频");
+  p.push("答题5题");
+  if (EXAM_OF[r.week]===r.key) p.push(MONTH_EXAMS.has(r.key) ? "月考(20题)" : "周考(10题)");
+  if (r.d.getDay()===5) p.push("错题复盘");
+  r.act = p.join(" + ");
+});
+
+// ---- 今日定位(?d=2026-08-03 可预览任意一天) ----
+const qd = new URLSearchParams(location.search).get("d");
+const now = qd ? new Date(qd+"T12:00:00") : new Date();
+const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+const dayNo = Math.floor((today0 - START)/864e5) + 1;
+const inRange = dayNo>=1 && dayNo<=TOTAL;
+const todayRow = inRange ? SCHED[dayNo-1] : null;
+const todayKey = fmt(today0);
+const curWeek = inRange ? todayRow.week : (dayNo<1 ? 0 : 16);
+const isExamDay = inRange && !todayRow.rest && EXAM_OF[curWeek]===todayRow.key;
+const isMonthly = isExamDay && MONTH_EXAMS.has(todayRow.key);
+
+// ---- 本机记录 ----
+const store = {
+  get name(){ return localStorage.getItem("bra:name")||""; },
+  set name(v){ localStorage.setItem("bra:name", v); },
+  get(k){ try{ return JSON.parse(localStorage.getItem("bra:"+k)); }catch(e){ return null; } },
+  set(k,v){ localStorage.setItem("bra:"+k, JSON.stringify(v)); }
+};
+function weekWrongs(w){ return store.get("w:"+w) || []; }
+function addWrongs(w, ids){
+  const s = new Set(weekWrongs(w)); ids.forEach(i=>s.add(i)); store.set("w:"+w, Array.from(s));
+}
+function delWrongs(w, ids){
+  store.set("w:"+w, weekWrongs(w).filter(i=>!ids.includes(i)));
+}
+
+// ---- 抽题 ----
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0;
+  let t = Math.imul(a^a>>>15, 1|a); t = t+Math.imul(t^t>>>7, 61|t)^t;
+  return ((t^t>>>14)>>>0)/4294967296; }; }
+function hash(s){ let h=2166136261; for(const c of s){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); } return h>>>0; }
+function shuffled(arr, rnd){ const a=arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function themedPick(seed, week, count){
+  const rnd = mulberry32(hash(seed));
+  const cat = WEEK_CAT[week];
+  const pool = cat ? BANK.questions.filter(q=>q.cat===cat) : BANK.questions.slice();
+  const rest = cat ? BANK.questions.filter(q=>q.cat!==cat) : [];
+  return shuffled(pool, rnd).concat(shuffled(rest, rnd)).slice(0, count);
+}
+
+// ---- 通用答题引擎 ----
+const QZ = {};   // 容器id -> 状态
+function ensureName(boxId){
+  const el = document.getElementById(boxId);
+  const nm = (el ? el.value : store.name).trim();
+  if (!nm){ if(el){ el.focus(); el.placeholder="请先填姓名"; } return null; }
+  store.name = nm; return nm;
+}
+function nameBoxHtml(id){
+  if (NAMES.length){
+    const opts = NAMES.map(x=>`<option${x===store.name?" selected":""}>${x}</option>`).join("");
+    return `<div class="namebox"><select id="${id}">${opts}</select></div>`;
+  }
+  return `<div class="namebox"><input id="${id}" placeholder="你的姓名" value="${store.name}"></div>`;
+}
+function qStart(cid, qs, meta){
+  QZ[cid] = { qs, meta, sel: qs.map(q => q.type==="多选" ? new Set() : null), done:false };
+  qRender(cid);
+}
+function qRender(cid){
+  const st = QZ[cid];
+  let h = "";
+  st.qs.forEach((q,i)=>{
+    h += `<div class="q"><div class="q-head"><b>${q.type}</b>第 ${i+1} / ${st.qs.length} 题${q.type==="多选"?" · 可选多项":""}</div>`;
+    h += `<div class="q-stem">${q.q}</div><div class="opts">`;
+    const rows = q.type==="判断" ? [{k:"√",t:"正确"},{k:"×",t:"错误"}] : q.opts;
+    rows.forEach(o=>{
+      const on = q.type==="多选" ? st.sel[i].has(o.k) : st.sel[i]===o.k;
+      h += `<button class="opt${on?" on":""}" onclick="qPick('${cid}',${i},'${o.k}')"><span class="k">${o.k}</span><span>${o.t}</span></button>`;
+    });
+    h += `</div></div>`;
+  });
+  h += `<button class="btn-main" onclick="qSubmit('${cid}')">交卷</button>`;
+  document.getElementById(cid).innerHTML = h;
+}
+function qPick(cid,i,k){
+  const st = QZ[cid], q = st.qs[i];
+  if (st.done) return;
+  if (q.type==="多选"){ st.sel[i].has(k) ? st.sel[i].delete(k) : st.sel[i].add(k); }
+  else st.sel[i] = k;
+  qRender(cid);
+}
+function qAns(st,i){ const s = st.sel[i];
+  return st.qs[i].type==="多选" ? Array.from(s).sort().join("") : (s||""); }
+function qSubmit(cid){
+  const st = QZ[cid];
+  for (let i=0;i<st.qs.length;i++){
+    if (!qAns(st,i)){ alert("第 "+(i+1)+" 题还没作答"); return; }
+  }
+  st.done = true;
+  let c = 0; const wrongIds = [];
+  const marks = st.qs.map((q,i)=>{ const ok = qAns(st,i)===q.ans; ok ? c++ : wrongIds.push(q.id); return ok; });
+  st.meta.onDone && st.meta.onDone(c, wrongIds);
+  const per = Math.round(100/st.qs.length), score = c*per, pass = score>=st.meta.passScore;
+  let h = `<div class="score-line">${score} 分 <span class="sub" style="font-size:15px;font-weight:400">${c}/${st.qs.length} 题 · ${pass?"合格":"未合格"}</span></div>`;
+  st.qs.forEach((q,i)=>{
+    h += `<div class="q"><div class="q-head"><b>${q.type}</b>第 ${i+1} 题</div><div class="q-stem">${q.q}</div>`;
+    h += `<div class="verdict ${marks[i]?"ok":"no"}">${marks[i]?"✓ 答对":"✗ 答错"} · 你的答案 ${qAns(st,i)} · 正确答案 ${q.ans}</div><div class="opts">`;
+    const rows = q.type==="判断" ? [{k:"√",t:"正确"},{k:"×",t:"错误"}] : q.opts;
+    rows.forEach(o=>{
+      const hit = q.ans.includes(o.k), chose = qAns(st,i).includes(o.k);
+      h += `<div class="opt${hit?" hit":(chose?" miss":"")}"><span class="k">${o.k}</span><span>${o.t}${hit?" ✓":""}</span></div>`;
+    });
+    h += `</div></div>`;
+  });
+  if (st.meta.copyText){
+    const txt = st.meta.copyText(c, score, pass);
+    h += `<div class="copybox" id="ct-${cid}">${txt}</div>`;
+    h += `<button class="btn-main" onclick="copyText('ct-${cid}')">复制成绩,发到群里</button>`;
+  }
+  document.getElementById(cid).innerHTML = h;
+  refreshAll();
+}
+function copyText(id){
+  const t = document.getElementById(id).textContent;
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(
+    ()=>alert("已复制,去群里粘贴即可"),
+    ()=>{ const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta);
+      ta.select(); document.execCommand("copy"); ta.remove(); alert("已复制,去群里粘贴即可"); });
+}
+
+// ---- 今日卡 ----
+function renderToday(){
+  const el = document.getElementById("today");
+  let h = "";
+  if (dayNo < 1){
+    h = `<p class="big">距启动还有 ${1-dayNo} 天 <span class="sub">7月20日开始</span></p>
+         <div class="sub" style="margin-top:4px">下面的"每日 5 题"已经可以练,先热热身。</div>`;
+  } else if (dayNo > TOTAL){
+    h = `<p class="big">活动已收官 <span class="sub">100 天完成</span></p>`;
+  } else {
+    const r = todayRow;
+    h = `<p class="big">第 ${r.n} 天 <span class="sub">/ 100 · ${r.key.replace("-","/")} ${WD[r.d.getDay()]}</span></p>`;
+    h += `<div class="bar"><i style="width:${r.n}%"></i></div>`;
+    h += `<div class="theme-tag">第${r.week}周 · ${themeName(r.week)}</div>`;
+    if (r.rest){
+      h += `<ul class="tasks"><li><span class="dot">■</span>今天休息(${r.restwhy}),不安排任务;闲着可以练一组</li></ul>`;
+    } else {
+      h += `<ul class="tasks">`;
+      if (VIDEO_OF[r.week]===r.key){
+        const link = VIDEO_LINKS[r.week];
+        h += `<li><span class="dot">■</span>看本周警示视频${link?` — <a href="${link}" target="_blank" rel="noopener">点此观看</a>`:"(链接见工作群)"}</li>`;
+      }
+      const dr = store.get("r:"+todayKey);
+      h += `<li><span class="dot">■</span>每日 5 题<span class="st ${dr?"ok":"todo"}">${dr?`✓ ${dr.c*20}分`:"待完成"}</span></li>`;
+      if (isExamDay){
+        const er = store.get("e:"+todayKey);
+        h += `<li><span class="dot">■</span>${isMonthly?"月考 20 题":"周考 10 题"}<span class="st ${er?"ok":"todo"}">${er?`✓ ${er.score}分`:"待完成"}</span></li>`;
+      }
+      if (r.d.getDay()===5) h += `<li><span class="dot">■</span>错题复盘 — 点开下方"本周错题"</li>`;
+      h += `</ul>`;
+    }
+  }
+  el.innerHTML = h;
+}
+
+// ---- 每日5题卡 ----
+function renderDaily(){
+  const chip = document.getElementById("dqChip");
+  const body = document.getElementById("dqBody");
+  const dr = store.get("r:"+todayKey);
+  const practice = !inRange || todayRow.rest;   // 热身/休息日:练习不计
+  if (dr){ chip.textContent = `✓ ${dr.c*20}分`; chip.className = "chip "+(dr.c>=3?"ok":"no"); }
+  else if (practice){ chip.textContent = "自愿练习"; chip.className = "chip mute"; }
+  else { chip.textContent = "待完成"; chip.className = "chip todo"; }
+  if (QZ.dqBody) return;   // 答题中不重绘
+  let h = "";
+  if (dr){
+    h = `<p class="sub" style="margin:10px 0 0">今天已完成:${dr.c}/5 题,${dr.c*20} 分${dr.c>=3?"(合格)":"(未合格,明天加油)"}。</p>
+         <button class="btn-ghost" onclick="startFree()">再随机练一组(不计成绩)</button>`;
+  } else {
+    h = `<p class="sub" style="margin:10px 0 0">${practice ? "今天不作要求,练一组保持手感:" : "今天的 5 道题(全员同一组),对 3 题及以上合格:"}</p>`;
+    h += nameBoxHtml("dqName");
+    h += `<button class="btn-main" onclick="startDaily()">开始答题</button>`;
+  }
+  body.innerHTML = h;
+}
+function startDaily(){
+  const nm = ensureName("dqName"); if (!nm) return;
+  const practice = !inRange || todayRow.rest;
+  qStart("dqBody", themedPick("bra-"+todayKey, curWeek, 5), {
+    passScore: 60,
+    onDone(c, wrong){
+      if (!store.get("r:"+todayKey)) store.set("r:"+todayKey, {c, name:nm, practice});
+      addWrongs(curWeek, wrong);
+    },
+    copyText(c, score, pass){
+      const tag = inRange ? `第${dayNo}天 ${todayKey.replace("-","/")}` : todayKey.replace("-","/")+" 热身";
+      return `【百日安全】${tag} ${nm} 每日5题 ${c}/5题 ${score}分${pass?"":"(待补练)"}`;
+    }
+  });
+}
+function startFree(){
+  qStart("dqBody", shuffled(BANK.questions, Math.random).slice(0,5), { passScore:60 });
+}
+
+// ---- 周考/月考卡 ----
+function renderExam(){
+  const card = document.getElementById("exCard");
+  if (!isExamDay){ card.hidden = true; return; }
+  card.hidden = false;
+  const title = document.getElementById("exTitle");
+  const chip = document.getElementById("exChip");
+  const body = document.getElementById("exBody");
+  const label = isMonthly ? "月考 · 20 题" : `第${curWeek}周周考 · 10 题`;
+  title.firstChild.textContent = label;
+  const er = store.get("e:"+todayKey);
+  if (er){ chip.textContent = `✓ ${er.score}分`; chip.className = "chip "+(er.score>=80?"ok":"no"); }
+  else { chip.textContent = "待完成"; chip.className = "chip todo"; }
+  if (QZ.exBody) return;
+  let h = "";
+  if (er){
+    h = `<p class="sub" style="margin:10px 0 0">已完成:${er.c}/${er.total} 题,${er.score} 分${er.score>=80?"(合格)":"(未合格,看下方错题补课)"}。</p>`;
+  } else {
+    h = `<p class="sub" style="margin:10px 0 0">${isMonthly?"月考范围为全部已学内容,":"周考以本周主题为主,"}80 分合格:</p>`;
+    h += nameBoxHtml("exName");
+    h += `<button class="btn-main" onclick="startExam()">开始${isMonthly?"月考":"周考"}</button>`;
+  }
+  body.innerHTML = h;
+}
+function startExam(){
+  const nm = ensureName("exName"); if (!nm) return;
+  const count = isMonthly ? 20 : 10;
+  const qs = isMonthly ? shuffled(BANK.questions, mulberry32(hash("bra-m-"+todayKey))).slice(0,20)
+                       : themedPick("bra-e-"+todayKey, curWeek, 10);
+  qStart("exBody", qs, {
+    passScore: 80,
+    onDone(c, wrong){
+      const per = Math.round(100/count);
+      if (!store.get("e:"+todayKey)) store.set("e:"+todayKey, {c, total:count, score:c*per, name:nm, monthly:isMonthly});
+      addWrongs(curWeek, wrong);
+    },
+    copyText(c, score, pass){
+      return `【百日安全】${todayKey.replace("-","/")} ${nm} ${isMonthly?"月考":"第"+curWeek+"周周考"} ${c}/${count}题 ${score}分${pass?"(合格)":"(未合格)"}`;
+    }
+  });
+}
+
+// ---- 本周错题卡 ----
+function renderWrongs(){
+  const chip = document.getElementById("wrChip");
+  const body = document.getElementById("wrBody");
+  const ids = weekWrongs(curWeek);
+  chip.textContent = ids.length ? ids.length+" 道" : "无";
+  chip.className = "chip "+(ids.length?"no":"ok");
+  if (QZ.wrBody) return;
+  if (!ids.length){
+    body.innerHTML = `<p class="sub" style="margin:10px 0 0">本周(本机)还没有错题,保持!</p>`;
+    return;
+  }
+  let h = `<p class="sub" style="margin:10px 0 0">本周答错过的题(练对一次自动销号):</p>`;
+  ids.forEach(id=>{
+    const q = QMAP[id]; if (!q) return;
+    h += `<div class="wrong-item">${q.q}<div class="wa">正确答案:${q.ans}</div></div>`;
+  });
+  h += `<button class="btn-main" onclick="startRedo()">重练错题(${Math.min(ids.length,10)} 题)</button>`;
+  body.innerHTML = h;
+}
+function startRedo(){
+  const ids = weekWrongs(curWeek);
+  const qs = shuffled(ids.map(i=>QMAP[i]).filter(Boolean), Math.random).slice(0,10);
+  qStart("wrBody", qs, {
+    passScore: 101,   // 重练不谈合格
+    onDone(c, wrong){
+      const rightIds = qs.map(q=>q.id).filter(id=>!wrong.includes(id));
+      delWrongs(curWeek, rightIds);
+    }
+  });
+}
+
+// ---- 本周简答 ----
+function renderShort(){
+  const body = document.getElementById("sqBody");
+  const w = Math.min(Math.max(curWeek,1),15);
+  const cat = WEEK_CAT[w];
+  const list = cat ? (BANK.shortqs[String(cat)]||[]) : Object.values(BANK.shortqs).flat();
+  let h = "";
+  list.forEach(s=>{
+    h += `<details class="sq"><summary>${s.q}</summary><div class="ans">参考答案:${s.a}</div></details>`;
+  });
+  h += `<p class="note">简答不计分,口头能说出要点即可。</p>`;
+  body.innerHTML = h;
+}
+
+// ---- 逐日安排 ----
+function renderSched(){
+  const el = document.getElementById("schedList");
+  let h = "";
+  for (let w=1; w<=15; w++){
+    const dl = SCHED.filter(r=>r.week===w);
+    if (!dl.length) continue;
+    const open = inRange && curWeek===w ? " open" : "";
+    const rng = dl[0].key.replace("-","/") + "–" + dl[dl.length-1].key.replace("-","/");
+    h += `<details class="wk"${open}><summary>第${w}周 <span class="rng">${rng} · ${themeName(w)}</span></summary>`;
+    dl.forEach(r=>{
+      const isToday = inRange && r.n===dayNo;
+      const dr = store.get("r:"+r.key), er = store.get("e:"+r.key);
+      h += `<div class="drow${r.rest?" rest":""}${isToday?" today-row":""}">`;
+      h += `<span class="dn">第${r.n}天</span><span class="dd">${r.key.replace("-","/")} ${WD[r.d.getDay()]}</span><span>${r.act}</span>`;
+      if (dr || er){
+        const bits = [];
+        if (dr) bits.push("5题"+dr.c*20+"分");
+        if (er) bits.push((er.monthly?"月考":"周考")+er.score+"分");
+        h += `<span class="done">✓ ${bits.join(" · ")}</span>`;
+      }
+      h += `</div>`;
+    });
+    h += `</details>`;
+  }
+  el.innerHTML = h;
+}
+
+function refreshAll(){ renderToday(); renderDaily(); renderExam(); renderWrongs(); renderSched(); }
+refreshAll(); renderShort();
+</script>
