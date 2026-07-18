@@ -152,7 +152,8 @@ const BANK = {"cats": {"1": "高温防暑与职业健康", "2": "设备检维修
 const QMAP = {}; BANK.questions.forEach(q => QMAP[q.id] = q);
 const START = new Date(2026, 6, 20);
 const TOTAL = 100;
-const WEEK_CAT = {1:10, 2:2, 3:3, 4:4, 5:1, 6:9, 7:7, 8:5, 9:6, 10:8};
+const WEEK_CAT = {1:[10],2:[2],3:[3],4:[4],5:[1],6:[9],7:[7],8:[5],9:[6],10:[8],
+  11:[10,2],12:[3],13:[4,1,9],14:[7,5,6],15:[8]};   // 11-15周为复习周,分类数按当周工作日多少分配
 const HOLIDAYS = {"09-25":"中秋","09-26":"中秋","09-27":"中秋","10-01":"国庆","10-02":"国庆",
   "10-03":"国庆","10-04":"国庆","10-05":"国庆","10-06":"国庆","10-07":"国庆"};
 const MONTH_EXAMS = new Set(["07-30","08-27","09-24","10-22"]);  // 每月最后一个周四
@@ -161,7 +162,8 @@ const WD = ["周日","周一","周二","周三","周四","周五","周六"];
 
 function fmt(d){ return String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function dateOfDay(n){ const d = new Date(START); d.setDate(d.getDate()+n-1); return d; }
-function themeName(w){ return WEEK_CAT[w] ? BANK.cats[String(WEEK_CAT[w])] : "综合复习(全部题类)"; }
+function themeName(w){ const cs = WEEK_CAT[w]; if (!cs) return "综合练习";
+  return (w>=11?"复习:":"") + cs.map(c=>BANK.cats[String(c)]).join("、"); }
 
 // ---- 生成100天日程 ----
 const SCHED = [];
@@ -224,9 +226,9 @@ function shuffled(arr, rnd){ const a=arr.slice();
   for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function themedPick(seed, week, count){
   const rnd = mulberry32(hash(seed));
-  const cat = WEEK_CAT[week];
-  const pool = cat ? BANK.questions.filter(q=>q.cat===cat) : BANK.questions.slice();
-  const rest = cat ? BANK.questions.filter(q=>q.cat!==cat) : [];
+  const cs = WEEK_CAT[week];
+  const pool = cs ? BANK.questions.filter(q=>cs.includes(q.cat)) : BANK.questions.slice();
+  const rest = cs ? BANK.questions.filter(q=>!cs.includes(q.cat)) : [];
   return shuffled(pool, rnd).concat(shuffled(rest, rnd)).slice(0, count);
 }
 
@@ -464,8 +466,8 @@ function startRedo(){
 function renderShort(){
   const body = document.getElementById("sqBody");
   const w = Math.min(Math.max(curWeek,1),15);
-  const cat = WEEK_CAT[w];
-  const list = cat ? (BANK.shortqs[String(cat)]||[]) : Object.values(BANK.shortqs).flat();
+  const cs = WEEK_CAT[w] || [];
+  const list = cs.length ? cs.flatMap(c=>BANK.shortqs[String(c)]||[]) : Object.values(BANK.shortqs).flat();
   let h = "";
   list.forEach(s=>{
     h += `<details class="sq"><summary>${s.q}</summary><div class="ans">参考答案:${s.a}</div></details>`;
