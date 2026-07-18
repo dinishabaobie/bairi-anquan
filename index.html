@@ -180,8 +180,12 @@ for (let w=1; w<=15; w++){
   const thu = wk.find(r=>r.d.getDay()===4);
   EXAM_OF[w] = thu ? thu.key : EXAM_OVERRIDE[w];
 }
+const FINAL_KEY = "10-27";
+delete VIDEO_OF[15];              // 收官周不安排警示视频
+EXAM_OF[15] = FINAL_KEY;          // 第100天结业考试
 SCHED.forEach(r=>{
   if (r.rest){ r.act = "休 · "+r.restwhy; return; }
+  if (r.key===FINAL_KEY){ r.act = "结业考试(30题)"; return; }
   const p = [];
   if (VIDEO_OF[r.week]===r.key) p.push("看警示视频");
   p.push("答题5题");
@@ -201,6 +205,7 @@ const todayKey = fmt(today0);
 const curWeek = inRange ? todayRow.week : (dayNo<1 ? 0 : 16);
 const isExamDay = inRange && !todayRow.rest && EXAM_OF[curWeek]===todayRow.key;
 const isMonthly = isExamDay && MONTH_EXAMS.has(todayRow.key);
+const isFinal = isExamDay && todayRow.key===FINAL_KEY;
 
 // ---- 本机记录 ----
 const store = {
@@ -285,7 +290,7 @@ function qSubmit(cid){
   let c = 0; const wrongIds = [];
   const marks = st.qs.map((q,i)=>{ const ok = qAns(st,i)===q.ans; ok ? c++ : wrongIds.push(q.id); return ok; });
   st.meta.onDone && st.meta.onDone(c, wrongIds);
-  const per = Math.round(100/st.qs.length), score = c*per, pass = score>=st.meta.passScore;
+  const score = Math.round(c*100/st.qs.length), pass = score>=st.meta.passScore;
   let h = `<div class="score-line">${score} 分 <span class="sub" style="font-size:15px;font-weight:400">${c}/${st.qs.length} 题 · ${pass?"合格":"未合格"}</span></div>`;
   st.qs.forEach((q,i)=>{
     h += `<div class="q"><div class="q-head"><b>${q.type}</b>第 ${i+1} 题</div><div class="q-stem">${q.q}</div>`;
@@ -335,11 +340,13 @@ function renderToday(){
         const link = VIDEO_LINKS[r.week];
         h += `<li><span class="dot">■</span>看本周警示视频${link?` — <a href="${link}" target="_blank" rel="noopener">点此观看</a>`:"(链接见工作群)"}</li>`;
       }
-      const dr = store.get("r:"+todayKey);
-      h += `<li><span class="dot">■</span>每日 5 题<span class="st ${dr?"ok":"todo"}">${dr?`✓ ${dr.c*20}分`:"待完成"}</span></li>`;
+      if (!isFinal){
+        const dr = store.get("r:"+todayKey);
+        h += `<li><span class="dot">■</span>每日 5 题<span class="st ${dr?"ok":"todo"}">${dr?`✓ ${dr.c*20}分`:"待完成"}</span></li>`;
+      }
       if (isExamDay){
         const er = store.get("e:"+todayKey);
-        h += `<li><span class="dot">■</span>${isMonthly?"月考 20 题":"周考 10 题"}<span class="st ${er?"ok":"todo"}">${er?`✓ ${er.score}分`:"待完成"}</span></li>`;
+        h += `<li><span class="dot">■</span>${isFinal?"结业考试 30 题":isMonthly?"月考 20 题":"周考 10 题"}<span class="st ${er?"ok":"todo"}">${er?`✓ ${er.score}分`:"待完成"}</span></li>`;
       }
       if (r.d.getDay()===5) h += `<li><span class="dot">■</span>错题复盘 — 点开下方"错题"</li>`;
       h += `</ul>`;
@@ -353,7 +360,7 @@ function renderDaily(){
   const chip = document.getElementById("dqChip");
   const body = document.getElementById("dqBody");
   const dr = store.get("r:"+todayKey);
-  const practice = !inRange || todayRow.rest;   // 热身/休息日:练习不计
+  const practice = !inRange || todayRow.rest || isFinal;   // 热身/休息日/结业日:练习不计
   if (dr){ chip.textContent = `✓ ${dr.c*20}分`; chip.className = "chip "+(dr.c>=3?"ok":"no"); }
   else if (practice){ chip.textContent = "自愿练习"; chip.className = "chip mute"; }
   else { chip.textContent = "待完成"; chip.className = "chip todo"; }
@@ -396,7 +403,7 @@ function renderExam(){
   const title = document.getElementById("exTitle");
   const chip = document.getElementById("exChip");
   const body = document.getElementById("exBody");
-  const label = isMonthly ? "月考 · 20 题" : `第${curWeek}周周考 · 10 题`;
+  const label = isFinal ? "结业考试 · 30 题" : isMonthly ? "月考 · 20 题" : `第${curWeek}周周考 · 10 题`;
   title.firstChild.textContent = label;
   const er = store.get("e:"+todayKey);
   if (er){ chip.textContent = `✓ ${er.score}分`; chip.className = "chip "+(er.score>=80?"ok":"no"); }
@@ -406,26 +413,26 @@ function renderExam(){
   if (er){
     h = `<p class="sub" style="margin:10px 0 0">已完成:${er.c}/${er.total} 题,${er.score} 分${er.score>=80?"(合格)":"(未合格,看下方错题补课)"}。</p>`;
   } else {
-    h = `<p class="sub" style="margin:10px 0 0">${isMonthly?"月考范围为全部已学内容,":"周考以本周主题为主,"}80 分合格:</p>`;
+    h = `<p class="sub" style="margin:10px 0 0">${isFinal?"结业考试覆盖全部已学内容,":isMonthly?"月考范围为全部已学内容,":"周考以本周主题为主,"}80 分合格:</p>`;
     h += nameBoxHtml("exName");
-    h += `<button class="btn-main" onclick="startExam()">开始${isMonthly?"月考":"周考"}</button>`;
+    h += `<button class="btn-main" onclick="startExam()">开始${isFinal?"结业考试":isMonthly?"月考":"周考"}</button>`;
   }
   body.innerHTML = h;
 }
 function startExam(){
   const nm = ensureName("exName"); if (!nm) return;
-  const count = isMonthly ? 20 : 10;
-  const qs = isMonthly ? shuffled(BANK.questions, mulberry32(hash("bra-m-"+todayKey))).slice(0,20)
+  const count = isFinal ? 30 : isMonthly ? 20 : 10;
+  const qs = (isFinal || isMonthly) ? shuffled(BANK.questions, mulberry32(hash("bra-m-"+todayKey))).slice(0,count)
                        : themedPick("bra-e-"+todayKey, curWeek, 10);
   qStart("exBody", qs, {
     passScore: 80,
     onDone(c, wrong){
-      const per = Math.round(100/count);
-      if (!store.get("e:"+todayKey)) store.set("e:"+todayKey, {c, total:count, score:c*per, name:nm, monthly:isMonthly});
+      if (!store.get("e:"+todayKey)) store.set("e:"+todayKey,
+        {c, total:count, score:Math.round(c*100/count), name:nm, monthly:isMonthly, final:isFinal});
       addWrongs(curWeek, wrong);
     },
     copyText(c, score, pass){
-      return `【百日安全】${todayKey.replace("-","/")} ${nm} ${isMonthly?"月考":"第"+curWeek+"周周考"} ${c}/${count}题 ${score}分${pass?"(合格)":"(未合格)"}`;
+      return `【百日安全】${todayKey.replace("-","/")} ${nm} ${isFinal?"结业考试":isMonthly?"月考":"第"+curWeek+"周周考"} ${c}/${count}题 ${score}分${pass?"(合格)":"(未合格)"}`;
     }
   });
 }
@@ -494,7 +501,7 @@ function renderSched(){
       if (dr || er){
         const bits = [];
         if (dr) bits.push("5题"+dr.c*20+"分");
-        if (er) bits.push((er.monthly?"月考":"周考")+er.score+"分");
+        if (er) bits.push((er.final?"结业":er.monthly?"月考":"周考")+er.score+"分");
         h += `<span class="done">✓ ${bits.join(" · ")}</span>`;
       }
       h += `</div>`;
