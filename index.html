@@ -205,12 +205,13 @@ const isExamDay = inRange && !todayRow.rest && EXAM_OF[curWeek]===todayRow.key;
 const isMonthly = isExamDay && MONTH_EXAMS.has(todayRow.key);
 const isFinal = isExamDay && todayRow.key===FINAL_KEY;
 
-// ---- 本机记录 ----
+// ---- 临时记录:只在本次打开期间有效,刷新/重开即清空 ----
+const MEM = {};
 const store = {
-  get name(){ return localStorage.getItem("bra:name")||""; },
-  set name(v){ localStorage.setItem("bra:name", v); },
-  get(k){ try{ return JSON.parse(localStorage.getItem("bra:"+k)); }catch(e){ return null; } },
-  set(k,v){ localStorage.setItem("bra:"+k, JSON.stringify(v)); }
+  get name(){ return MEM.name || ""; },
+  set name(v){ MEM.name = v; },
+  get(k){ return (k in MEM) ? MEM[k] : null; },
+  set(k,v){ MEM[k] = v; }
 };
 function weekWrongs(w){ return store.get("w:"+w) || []; }
 function addWrongs(w, ids){
@@ -455,10 +456,10 @@ function renderWrongs(){
   chip.className = "chip "+(ids.length?"no":"ok");
   if (QZ.wrBody) return;
   if (!ids.length){
-    body.innerHTML = `<p class="sub" style="margin:10px 0 0">本周(本机)还没有错题,保持!</p>`;
+    body.innerHTML = `<p class="sub" style="margin:10px 0 0">这次还没答错题,保持!</p>`;
     return;
   }
-  let h = `<p class="sub" style="margin:10px 0 0">本周答错过的题(练对一次自动销号):</p>`;
+  let h = `<p class="sub" style="margin:10px 0 0">这次答错的题(练对一次自动销号):</p>`;
   ids.forEach(id=>{
     const q = QMAP[id]; if (!q) return;
     h += `<div class="wrong-item">${q.q}<div class="wa">正确答案:${q.ans}</div></div>`;
