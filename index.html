@@ -156,7 +156,7 @@ const WEEK_CAT = {1:[10],2:[2],3:[3],4:[4],5:[1],6:[9],7:[7],8:[5],9:[6],10:[8],
   11:[10,2],12:[3],13:[4,1,9],14:[7,5,6],15:[8]};   // 11-15周为复习周,分类数按当周工作日多少分配
 const HOLIDAYS = {"09-25":"中秋","09-26":"中秋","09-27":"中秋","10-01":"国庆","10-02":"国庆",
   "10-03":"国庆","10-04":"国庆","10-05":"国庆","10-06":"国庆","10-07":"国庆"};
-const MONTH_EXAMS = new Set(["07-30","08-27","09-24","10-22"]);  // 每月最后一个周四
+const MONTH_EXAMS = new Set(["08-27","09-24","10-22"]);  // 每月最后一个周四(7月开班未满月不设月考)
 const EXAM_OVERRIDE = {11:"09-30"};                              // 第11周周四逢国庆,提前到周三
 const WD = ["周日","周一","周二","周三","周四","周五","周六"];
 
@@ -229,6 +229,11 @@ function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0;
 function hash(s){ let h=2166136261; for(const c of s){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); } return h>>>0; }
 function shuffled(arr, rnd){ const a=arr.slice();
   for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function learnedCats(week){   // 截至某周已学过的分类
+  const s = new Set();
+  for (let w=1; w<=Math.min(week,15); w++) (WEEK_CAT[w]||[]).forEach(c=>s.add(c));
+  return Array.from(s);
+}
 function themedPick(seed, week, count){
   const rnd = mulberry32(hash(seed));
   const cs = WEEK_CAT[week];
@@ -422,8 +427,14 @@ function renderExam(){
 function startExam(){
   const nm = ensureName("exName"); if (!nm) return;
   const count = isFinal ? 30 : isMonthly ? 20 : 10;
-  const qs = (isFinal || isMonthly) ? shuffled(BANK.questions, mulberry32(hash("bra-m-"+todayKey))).slice(0,count)
-                       : themedPick("bra-e-"+todayKey, curWeek, 10);
+  let qs;
+  if (isFinal || isMonthly){
+    const learned = learnedCats(curWeek);   // 月考/结业只考已学分类
+    const pool = BANK.questions.filter(q=>learned.includes(q.cat));
+    qs = shuffled(pool, mulberry32(hash("bra-m-"+todayKey))).slice(0,count);
+  } else {
+    qs = themedPick("bra-e-"+todayKey, curWeek, 10);
+  }
   qStart("exBody", qs, {
     passScore: 80,
     onDone(c, wrong){
