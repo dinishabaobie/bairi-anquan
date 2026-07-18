@@ -173,6 +173,7 @@ const WEEK_CAT = {1:[10],2:[2],3:[3],4:[4],5:[1],6:[9],7:[7],8:[5],9:[6],10:[8],
   11:[10,2],12:[3],13:[4,1,9],14:[7,5,6],15:[8]};   // 11-15周为复习周,分类数按当周工作日多少分配
 const HOLIDAYS = {"09-25":"中秋","09-26":"中秋","09-27":"中秋","10-01":"国庆","10-02":"国庆",
   "10-03":"国庆","10-04":"国庆","10-05":"国庆","10-06":"国庆","10-07":"国庆"};
+const MAKEUP = new Set(["09-20","10-10"]);   // 国庆调休上班日(国办发明电〔2025〕7号)
 const MONTH_EXAMS = new Set(["08-27","09-24","10-22"]);  // 每月最后一个周四(7月开班未满月不设月考)
 const EXAM_OVERRIDE = {11:"09-30"};                              // 第11周周四逢国庆,提前到周三
 const WD = ["周日","周一","周二","周三","周四","周五","周六"];
@@ -186,7 +187,7 @@ function themeName(w){ const cs = WEEK_CAT[w]; if (!cs) return "综合练习";
 const SCHED = [];
 for (let n=1; n<=TOTAL; n++){
   const d = dateOfDay(n), week = Math.floor((n-1)/7)+1, key = fmt(d);
-  const rest = !!HOLIDAYS[key] || d.getDay()===0 || d.getDay()===6;
+  const rest = !!HOLIDAYS[key] || ((d.getDay()===0 || d.getDay()===6) && !MAKEUP.has(key));
   SCHED.push({n, d, week, key, rest, restwhy: HOLIDAYS[key] || "周末"});
 }
 const VIDEO_OF = {}, EXAM_OF = {};
@@ -208,7 +209,7 @@ SCHED.forEach(r=>{
   p.push("答题5题");
   if (EXAM_OF[r.week]===r.key) p.push(MONTH_EXAMS.has(r.key) ? "月考(20题)" : "周考(10题)");
   if (r.d.getDay()===5) p.push("讨论问答");
-  r.act = p.join(" + ");
+  r.act = p.join(" + ") + (MAKEUP.has(r.key) ? "(调休上班)" : "");
 });
 
 // ---- 今日定位(?d=2026-08-03 可预览任意一天) ----
@@ -357,6 +358,7 @@ function renderToday(){
     h = `<p class="big">第 ${r.n} 天 <span class="sub">/ 100 · ${r.key.replace("-","/")} ${WD[r.d.getDay()]}</span></p>`;
     h += `<div class="bar"><i style="width:${r.n}%"></i></div>`;
     h += `<div class="theme-tag">第${r.week}周 · ${themeName(r.week)}</div>`;
+    if (MAKEUP.has(r.key)) h += `<div class="sub" style="margin-top:6px">今天为调休上班日,任务照常</div>`;
     if (r.rest){
       h += `<ul class="tasks"><li><span class="dot">■</span>今天休息(${r.restwhy}),不安排任务;闲着可以练一组</li></ul>`;
     } else {
