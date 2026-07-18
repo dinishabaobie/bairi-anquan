@@ -126,7 +126,7 @@ button:focus-visible,.opt:focus-visible,summary:focus-visible{outline:2.5px soli
     <div class="body" id="exBody"></div>
   </details>
   <details class="card" id="wrCard">
-    <summary>本周错题<span class="chip" id="wrChip"></span></summary>
+    <summary>错题<span class="chip" id="wrChip"></span></summary>
     <div class="body" id="wrBody"></div>
   </details>
   <details class="card" id="sqCard">
@@ -339,7 +339,7 @@ function renderToday(){
         const er = store.get("e:"+todayKey);
         h += `<li><span class="dot">■</span>${isMonthly?"月考 20 题":"周考 10 题"}<span class="st ${er?"ok":"todo"}">${er?`✓ ${er.score}分`:"待完成"}</span></li>`;
       }
-      if (r.d.getDay()===5) h += `<li><span class="dot">■</span>错题复盘 — 点开下方"本周错题"</li>`;
+      if (r.d.getDay()===5) h += `<li><span class="dot">■</span>错题复盘 — 点开下方"错题"</li>`;
       h += `</ul>`;
     }
   }
