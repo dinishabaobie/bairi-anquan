@@ -145,6 +145,10 @@ button:focus-visible,.opt:focus-visible,summary:focus-visible{outline:2.5px soli
     <summary id="exTitle">周考<span class="chip" id="exChip"></span></summary>
     <div class="body" id="exBody"></div>
   </details>
+  <details class="card" id="drCard">
+    <summary>百炼成钢 · 全库刷题<span class="chip" id="drChip"></span></summary>
+    <div class="body" id="drBody"></div>
+  </details>
   <details class="card" id="wrCard">
     <summary>错题<span class="chip" id="wrChip"></span></summary>
     <div class="body" id="wrBody"></div>
@@ -523,6 +527,174 @@ function renderShort(){
   body.innerHTML = h;
 }
 
+// ---- 百炼成钢 · 全库刷题 ----
+const TYPE_ORD = {"单选":0,"多选":1,"判断":2,"简答":3};
+const DRILL_ALL = BANK.questions.slice();
+Object.keys(BANK.shortqs||{}).forEach(c=>{ (BANK.shortqs[c]||[]).forEach((s,i)=>{
+  DRILL_ALL.push({type:"简答", cat:+c, q:s.q, a:s.a, id:"简答-"+c+"-"+(i+1)}); }); });
+DRILL_ALL.sort((a,b)=> TYPE_ORD[a.type]-TYPE_ORD[b.type] || a.cat-b.cat ||
+  String(a.num||a.id).localeCompare(String(b.num||b.id)));
+const DRMAP = {}; DRILL_ALL.forEach(q=>DRMAP[q.id]=q);
+const DR_KEY = "bra-drill-v1";
+const CAN_SAVE = (()=>{ try{ localStorage.setItem("_bra_t","1"); localStorage.removeItem("_bra_t");
+  return true; }catch(e){ return false; } })();
+function drSt(){
+  if (!MEM._drill){
+    let v = null;
+    if (CAN_SAVE) try{ v = JSON.parse(localStorage.getItem(DR_KEY)); }catch(e){}
+    MEM._drill = (v && v.right) ? v : {right:{}, wrong:{}, pos:{}, f:{type:""}};
+    if (!MEM._drill.f) MEM._drill.f = {type:""};
+  }
+  return MEM._drill;
+}
+function drSave(){ if (CAN_SAVE) try{ localStorage.setItem(DR_KEY, JSON.stringify(MEM._drill)); }catch(e){} }
+function drKeyOf(){ return drSt().f.type || "全部"; }
+function drPool(){
+  const f = drSt().f;
+  return DRILL_ALL.filter(q => !f.type || q.type===f.type);
+}
+function drFilter(){
+  drSt().f = { type: document.getElementById("drType").value };
+  drSave(); renderDrill(true);
+}
+function renderDrill(force){
+  const st = drSt();
+  const chip = document.getElementById("drChip");
+  const done = DRILL_ALL.filter(q=>st.right[q.id]||st.wrong[q.id]).length;
+  chip.textContent = done ? done+"/"+DRILL_ALL.length : DRILL_ALL.length+" 题";
+  chip.className = "chip "+(done>=DRILL_ALL.length ? "ok" : "mute");
+  if (MEM._drun && !force) return;   // 刷题中不重绘
+  if (force) MEM._drun = null;
+  const pool = drPool();
+  const seen = pool.filter(q=>st.right[q.id]||st.wrong[q.id]).length;
+  const redo = DRILL_ALL.filter(q=>st.wrong[q.id]).length;
+  const pos = Math.min(st.pos[drKeyOf()]||0, pool.length);
+  const tyOpts = `<option value="">全部题型 · ${DRILL_ALL.length} 题</option>` +
+    ["单选","多选","判断","简答"].map(t=>{
+      const n = DRILL_ALL.filter(q=>q.type===t).length;
+      return `<option value="${t}"${st.f.type===t?" selected":""}>${t} · ${n} 题</option>`;
+    }).join("");
+  let h = `<p class="sub" style="margin:10px 0 0">全部 ${DRILL_ALL.length} 道题按组刷,每组 10 题、即时判分,百日刷成钢。进度${CAN_SAVE?"存在本机,随时接着刷":"仅本次打开有效"}。</p>`;
+  h += `<div class="namebox"><select id="drType" onchange="drFilter()">${tyOpts}</select></div>`;
+  h += `<div class="bar"><i style="width:${pool.length?Math.round(seen*100/pool.length):0}%"></i></div>`;
+  h += `<div class="sub">当前范围 ${pool.length} 题 · 已刷 ${seen} 题${redo?` · 待回炉 ${redo} 题`:""}</div>`;
+  h += `<button class="btn-main" onclick="drStart('seq')">${pos>0&&pos<pool.length?`继续刷题 · 从第 ${pos+1} 题起`:(seen>=pool.length&&pool.length?"再刷一遍":"开始刷题")}</button>`;
+  if (redo) h += `<button class="btn-ghost" onclick="drStart('redo')">错题回炉(${Math.min(redo,10)} 题)</button>`;
+  if (done) h += `<p class="note"><a href="#" onclick="drReset();return false">清空刷题记录,从头再来</a></p>`;
+  document.getElementById("drBody").innerHTML = h;
+}
+function drStart(mode){
+  const st = drSt();
+  let list, base = 0, poolLen = 0;
+  if (mode==="redo"){
+    list = shuffled(DRILL_ALL.filter(q=>st.wrong[q.id]), Math.random).slice(0,10);
+  } else {
+    const pool = drPool();
+    poolLen = pool.length;
+    base = st.pos[drKeyOf()]||0;
+    if (base>=poolLen) base = 0;
+    list = pool.slice(base, base+10);
+  }
+  if (!list.length) return;
+  MEM._drun = { mode, list, base, poolLen,
+    qs: list.map(()=>({ sel:new Set(), mine:null, ok:false, reveal:false })), wrongThis: [] };
+  drRender();
+}
+function drQHtml(q, i){
+  const s = MEM._drun.qs[i];
+  let h = `<div class="q"><div class="q-head"><b>${q.type}</b>第 ${i+1} 题 · ${BANK.cats[String(q.cat)]}${q.type==="多选"&&s.mine===null?" · 可选多项":""}</div>`;
+  h += `<div class="q-stem">${q.q}</div>`;
+  if (q.type==="简答"){
+    if (s.mine===null && !s.reveal){
+      h += `<button class="btn-ghost" style="margin-top:0" onclick="drReveal(${i})">看参考答案</button>`;
+    } else {
+      h += `<div class="copybox" style="margin-top:0">参考答案:${q.a}</div>`;
+      if (s.mine===null){
+        h += `<div class="opts" style="margin-top:8px">`;
+        h += `<button class="opt" onclick="drMark(${i},true)"><span class="k">✓</span><span>能说出要点,过</span></button>`;
+        h += `<button class="opt" onclick="drMark(${i},false)"><span class="k">✗</span><span>还不熟,记入回炉</span></button></div>`;
+      } else {
+        h += `<div class="verdict ${s.ok?"ok":"no"}" style="margin-top:8px">${s.ok?"✓ 已过":"✗ 已记入回炉"}</div>`;
+      }
+    }
+  } else {
+    h += `<div class="opts">`;
+    const rows = q.type==="判断" ? [{k:"√",t:"正确"},{k:"×",t:"错误"}] : q.opts;
+    rows.forEach(o=>{
+      if (s.mine!==null){
+        const hit = q.ans.includes(o.k), chose = s.mine.includes(o.k);
+        h += `<div class="opt${hit?" hit":(chose?" miss":"")}"><span class="k">${o.k}</span><span>${o.t}${hit?" ✓":""}</span></div>`;
+      } else {
+        h += `<button class="opt${s.sel.has(o.k)?" on":""}" onclick="drPick(${i},'${o.k}')"><span class="k">${o.k}</span><span>${o.t}</span></button>`;
+      }
+    });
+    h += `</div>`;
+    if (s.mine!==null)
+      h += `<div class="verdict ${s.ok?"ok":"no"}">${s.ok?"✓ 答对":"✗ 答错"} · 你的答案 ${s.mine} · 正确答案 ${q.ans}</div>`;
+    else if (q.type==="多选" && s.sel.size)
+      h += `<button class="btn-main" style="margin-top:0" onclick="drJudge(${i})">确定</button>`;
+  }
+  return h + `</div>`;
+}
+function drRender(){
+  const run = MEM._drun;
+  const doneN = run.qs.filter(s=>s.mine!==null).length;
+  const okN = run.qs.filter(s=>s.ok).length;
+  const head = run.mode==="redo" ? `错题回炉 · 共 ${run.list.length} 题`
+    : `第 ${run.base+1}–${run.base+run.list.length} 题 / 共 ${run.poolLen} 题`;
+  let h = `<div class="q-head" style="margin-top:12px">${head}${doneN?` · 已答 ${doneN}/${run.list.length} · 对 ${okN}`:""}</div>`;
+  h += `<div class="bar" style="margin:6px 0 4px"><i style="width:${Math.round(doneN*100/run.list.length)}%"></i></div>`;
+  run.list.forEach((q,i)=>{ h += drQHtml(q, i); });
+  if (doneN >= run.list.length){
+    h += `<div class="score-line">本组 ${okN} / ${run.list.length} 题过关</div>`;
+    if (run.mode!=="redo"){
+      if (run.base + run.list.length < run.poolLen)
+        h += `<button class="btn-main" onclick="drStart('seq')">下一组 10 题</button>`;
+      else
+        h += `<p class="sub" style="margin:8px 0 0">这一遍刷完了!换个题型继续,或清零再来。</p>`;
+    }
+    if (run.wrongThis.length)
+      h += `<button class="btn-ghost" onclick="drStart('redo')">趁热回炉本组错题(${run.wrongThis.length} 题)</button>`;
+    h += `<button class="btn-ghost" onclick="drExit()">返回</button>`;
+  } else {
+    h += `<button class="btn-ghost" onclick="drExit()">退出 · 已答的都已记录</button>`;
+  }
+  document.getElementById("drBody").innerHTML = h;
+}
+function drReveal(i){ MEM._drun.qs[i].reveal = true; drRender(); }
+function drPick(i, k){
+  const run = MEM._drun, q = run.list[i], s = run.qs[i];
+  if (s.mine!==null) return;
+  if (q.type==="多选"){ s.sel.has(k) ? s.sel.delete(k) : s.sel.add(k); drRender(); }
+  else { s.sel = new Set([k]); drJudge(i); }
+}
+function drJudge(i){
+  const run = MEM._drun, q = run.list[i];
+  const mine = Array.from(run.qs[i].sel).sort().join("");
+  if (!mine) return;
+  drRecord(i, mine, mine===q.ans);
+}
+function drMark(i, ok){ drRecord(i, ok?"会":"不熟", ok); }
+function drRecord(i, mine, ok){
+  const run = MEM._drun, st = drSt(), q = run.list[i], s = run.qs[i];
+  s.mine = mine; s.ok = ok;
+  if (!ok) run.wrongThis.push(q.id);
+  if (ok){ st.right[q.id] = 1; delete st.wrong[q.id]; }
+  else st.wrong[q.id] = 1;
+  if (run.mode!=="redo" && run.qs.every(x=>x.mine!==null))
+    st.pos[drKeyOf()] = run.base + run.list.length;   // 整组答完才推进断点
+  drSave();
+  drRender();
+  renderDrill();   // 只刷新角标,答题界面不动
+}
+function drExit(){ MEM._drun = null; renderDrill(true); }
+function drReset(){
+  if (!confirm("确定清空全部刷题记录?进度、错题都会归零。")) return;
+  const f = drSt().f;
+  MEM._drill = {right:{}, wrong:{}, pos:{}, f};
+  drSave(); renderDrill(true);
+}
+
 // ---- 逐日安排 ----
 function renderSched(){
   const el = document.getElementById("schedList");
@@ -551,7 +723,7 @@ function renderSched(){
   el.innerHTML = h;
 }
 
-function refreshAll(){ renderToday(); renderDaily(); renderExam(); renderWrongs(); renderSched(); }
+function refreshAll(){ renderToday(); renderDaily(); renderExam(); renderWrongs(); renderDrill(); renderSched(); }
 refreshAll(); renderShort();
 </script>
 </body>
