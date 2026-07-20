@@ -137,12 +137,16 @@ button:focus-visible,.opt:focus-visible,summary:focus-visible{outline:2.5px soli
 
 <main>
   <section class="card" id="today"></section>
+  <details class="card" id="drawCard" open hidden>
+    <summary>每日抽签<span class="chip" id="drawChip"></span></summary>
+    <div class="body" id="drawBody"></div>
+  </details>
   <details class="card" id="dqCard" open>
     <summary>每日 5 题<span class="chip" id="dqChip"></span></summary>
     <div class="body" id="dqBody"></div>
   </details>
   <details class="card" id="exCard" hidden>
-    <summary id="exTitle">周考<span class="chip" id="exChip"></span></summary>
+    <summary id="exTitle">线下月考<span class="chip" id="exChip"></span></summary>
     <div class="body" id="exBody"></div>
   </details>
   <details class="card" id="drCard">
@@ -179,8 +183,7 @@ const WEEK_CAT = {1:[10],2:[2],3:[3],4:[4],5:[1],6:[9],7:[7],8:[5],9:[6],10:[8],
 const HOLIDAYS = {"09-25":"中秋","09-26":"中秋","09-27":"中秋","10-01":"国庆","10-02":"国庆",
   "10-03":"国庆","10-04":"国庆","10-05":"国庆","10-06":"国庆","10-07":"国庆"};
 const MAKEUP = new Set(["09-20","10-10"]);   // 国庆调休上班日(国办发明电〔2025〕7号)
-const MONTH_EXAMS = new Set(["08-27","09-24","10-22"]);  // 每月最后一个周四(7月开班未满月不设月考)
-const EXAM_OVERRIDE = {11:"09-30"};                              // 第11周周四逢国庆,提前到周三
+const MONTH_EXAMS = new Set(["08-31","09-30","10-16"]);  // 线下月考:每月最后一个工作日,末次提前至第13周(10/16),仅标注不在线上考
 const WD = ["周日","周一","周二","周三","周四","周五","周六"];
 
 function fmt(d){ return String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
@@ -195,24 +198,19 @@ for (let n=1; n<=TOTAL; n++){
   const rest = !!HOLIDAYS[key] || ((d.getDay()===0 || d.getDay()===6) && !MAKEUP.has(key));
   SCHED.push({n, d, week, key, rest, restwhy: HOLIDAYS[key] || "周末"});
 }
-const VIDEO_OF = {}, EXAM_OF = {};
+const VIDEO_OF = {};
 for (let w=1; w<=15; w++){
   const wk = SCHED.filter(r=>r.week===w && !r.rest);
   if (!wk.length) continue;
   VIDEO_OF[w] = wk[0].key;
-  const thu = wk.find(r=>r.d.getDay()===4);
-  EXAM_OF[w] = thu ? thu.key : EXAM_OVERRIDE[w];
 }
-const FINAL_KEY = "10-27";
-delete VIDEO_OF[15];              // 收官周不安排警示视频
-EXAM_OF[15] = FINAL_KEY;          // 第100天结业考试
+delete VIDEO_OF[15];              // 收官周不安排警示视频,转入总结评优
 SCHED.forEach(r=>{
   if (r.rest){ r.act = "休 · "+r.restwhy; return; }
-  if (r.key===FINAL_KEY){ r.act = "结业考试(30题)"; return; }
   const p = [];
   if (VIDEO_OF[r.week]===r.key) p.push("看警示视频");
   p.push("答题5题");
-  if (EXAM_OF[r.week]===r.key) p.push(MONTH_EXAMS.has(r.key) ? "月考(20题)" : "周考(10题)");
+  if (MONTH_EXAMS.has(r.key)) p.push("线下月考");
   if (r.d.getDay()===5) p.push("讨论问答");
   r.act = p.join(" + ") + (MAKEUP.has(r.key) ? "(调休上班)" : "");
 });
@@ -227,9 +225,7 @@ const inRange = dayNo>=1 && dayNo<=TOTAL;
 const todayRow = inRange ? SCHED[dayNo-1] : null;
 const todayKey = fmt(today0);
 const curWeek = inRange ? todayRow.week : (dayNo<1 ? 0 : 16);
-const isExamDay = inRange && !todayRow.rest && EXAM_OF[curWeek]===todayRow.key;
-const isMonthly = isExamDay && MONTH_EXAMS.has(todayRow.key);
-const isFinal = isExamDay && todayRow.key===FINAL_KEY;
+const isMonthExam = inRange && !todayRow.rest && MONTH_EXAMS.has(todayKey);   // 线下月考日,仅在页面标注
 
 // ---- 临时记录:只在本次打开期间有效,刷新/重开即清空 ----
 const MEM = {};
@@ -342,7 +338,7 @@ function qSubmit(cid){
   if (st.meta.copyText){
     const txt = st.meta.copyText(c, score, pass);
     h += `<div class="copybox" id="ct-${cid}">${txt}</div>`;
-    h += `<button class="btn-main" onclick="copyText('ct-${cid}')">复制成绩,发给记录人</button>`;
+    h += `<button class="btn-main" onclick="copyText('ct-${cid}')">复制成绩,发给班组长</button>`;
   }
   document.getElementById(cid).innerHTML = h;
   refreshAll();
@@ -350,9 +346,9 @@ function qSubmit(cid){
 function copyText(id){
   const t = document.getElementById(id).textContent;
   (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(
-    ()=>alert("已复制,发给记录人即可"),
+    ()=>alert("已复制,发给班组长即可"),
     ()=>{ const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta);
-      ta.select(); document.execCommand("copy"); ta.remove(); alert("已复制,发给记录人即可"); });
+      ta.select(); document.execCommand("copy"); ta.remove(); alert("已复制,发给班组长即可"); });
 }
 
 // ---- 今日卡 ----
@@ -378,13 +374,10 @@ function renderToday(){
         const link = VIDEO_LINKS[r.week];
         h += `<li><span class="dot">■</span>看本周警示视频${link?` — <a href="${link}" target="_blank" rel="noopener">点此观看</a>`:"(链接见工作群)"}</li>`;
       }
-      if (!isFinal){
-        const dr = store.get("r:"+todayKey);
-        h += `<li><span class="dot">■</span>每日 5 题<span class="st ${dr?"ok":"todo"}">${dr?`✓ ${dr.c*20}分`:"待完成"}</span></li>`;
-      }
-      if (isExamDay){
-        const er = store.get("e:"+todayKey);
-        h += `<li><span class="dot">■</span>${isFinal?"结业考试 30 题":isMonthly?"月考 20 题":"周考 10 题"}<span class="st ${er?"ok":"todo"}">${er?`✓ ${er.score}分`:"待完成"}</span></li>`;
+      const dr = store.get("r:"+todayKey);
+      h += `<li><span class="dot">■</span>每日 5 题<span class="st ${dr?"ok":"todo"}">${dr?`✓ ${dr.c*20}分`:"待完成"}</span></li>`;
+      if (isMonthExam){
+        h += `<li><span class="dot">■</span>本月<b>线下月考</b>（闭卷,到现场参加,成绩由记录人登记）</li>`;
       }
       if (r.d.getDay()===5) h += `<li><span class="dot">■</span>本周讨论问答 — 用下方"本周简答"的题互相提问</li>`;
       h += `</ul>`;
@@ -393,12 +386,55 @@ function renderToday(){
   el.innerHTML = h;
 }
 
+// ---- 每日抽签(班前会答题人员) ----
+const SECTIONS = {                       // 每日随机抽 2-3 人的段
+  "肃宁": ["张占江","梁川","吴万飞","李洋洋","王明轩","李毅"],
+  "黄骅港": ["丁旭","任家起","信世磊","王晓东"]
+};
+function drawFor(dateKey, salt){
+  const rng = mulberry32(hash("draw-"+dateKey+"-"+(salt||"")));
+  const out = {};
+  for (const sec in SECTIONS){
+    const n = rng() < 0.5 ? 2 : 3;       // 每段抽 2-3 人
+    out[sec] = shuffled(SECTIONS[sec], rng).slice(0, n);
+  }
+  return out;
+}
+function drawKey(){ return "bra-draw:"+todayKey; }
+function getDraw(){
+  if (CAN_SAVE){ try{ const v = JSON.parse(localStorage.getItem(drawKey())); if (v) return v; }catch(e){} }
+  else if (MEM["_draw"]) return MEM["_draw"];
+  const d = drawFor(todayKey, "");        // 默认按日期固定,同一天大家看到同一组
+  if (CAN_SAVE){ try{ localStorage.setItem(drawKey(), JSON.stringify(d)); }catch(e){} }
+  return d;
+}
+function redraw(){
+  const d = drawFor(todayKey, String(Date.now()));
+  if (CAN_SAVE){ try{ localStorage.setItem(drawKey(), JSON.stringify(d)); }catch(e){} } else MEM["_draw"] = d;
+  renderDraw();
+}
+function renderDraw(){
+  const card = document.getElementById("drawCard");
+  if (!inRange || todayRow.rest){ card.hidden = true; return; }   // 活动期外/休息日不抽签
+  card.hidden = false;
+  const chip = document.getElementById("drawChip");
+  const res = getDraw();
+  chip.textContent = todayKey.replace("-","/"); chip.className = "chip mute";
+  let h = `<p class="sub" style="margin:10px 0 0">今日班前会答题人员(抽中者到场,每人 5 题):</p><ul class="tasks">`;
+  for (const sec in SECTIONS){
+    h += `<li><span class="dot">■</span><b>${sec}段</b>：${(res[sec]||[]).join("、")}</li>`;
+  }
+  h += `<li><span class="dot">■</span><b>神池段</b>：3 人全员作答(不抽签)</li>`;
+  h += `</ul><button class="btn-ghost" onclick="redraw()">重新抽签</button>`;
+  document.getElementById("drawBody").innerHTML = h;
+}
+
 // ---- 每日5题卡 ----
 function renderDaily(){
   const chip = document.getElementById("dqChip");
   const body = document.getElementById("dqBody");
   const dr = store.get("r:"+todayKey);
-  const practice = !inRange || todayRow.rest || isFinal;   // 热身/休息日/结业日:练习不计
+  const practice = !inRange || todayRow.rest;   // 热身/休息日:练习不计
   if (dr){ chip.textContent = `✓ ${dr.c*20}分`; chip.className = "chip "+(dr.c>=3?"ok":"no"); }
   else if (practice){ chip.textContent = "自愿练习"; chip.className = "chip mute"; }
   else { chip.textContent = "待完成"; chip.className = "chip todo"; }
@@ -416,7 +452,7 @@ function renderDaily(){
 }
 function startDaily(){
   const nm = ensureName("dqName"); if (!nm) return;
-  const practice = !inRange || todayRow.rest || isFinal;
+  const practice = !inRange || todayRow.rest;
   qStart("dqBody", themedPick("bra-"+todayKey, curWeek, 5, 2), {
     passScore: 60,
     onDone(c, wrong){
@@ -433,52 +469,15 @@ function startFree(){
   qStart("dqBody", shuffled(BANK.questions, Math.random).slice(0,5), { passScore:60 });
 }
 
-// ---- 周考/月考卡 ----
+// ---- 线下月考卡:仅标注,不在线上考试 ----
 function renderExam(){
   const card = document.getElementById("exCard");
-  if (!isExamDay){ card.hidden = true; return; }
+  if (!isMonthExam){ card.hidden = true; return; }
   card.hidden = false;
-  const title = document.getElementById("exTitle");
   const chip = document.getElementById("exChip");
-  const body = document.getElementById("exBody");
-  const label = isFinal ? "结业考试 · 30 题" : isMonthly ? "月考 · 20 题" : `第${curWeek}周周考 · 10 题`;
-  title.firstChild.textContent = label;
-  const er = store.get("e:"+todayKey);
-  if (er){ chip.textContent = `✓ ${er.score}分`; chip.className = "chip "+(er.score>=80?"ok":"no"); }
-  else { chip.textContent = "待完成"; chip.className = "chip todo"; }
-  if (QZ.exBody) return;
-  let h = "";
-  if (er){
-    h = `<p class="sub" style="margin:10px 0 0">已完成:${er.c}/${er.total} 题,${er.score} 分${er.score>=80?"(合格)":"(未合格,看下方错题补课)"}。</p>`;
-  } else {
-    h = `<p class="sub" style="margin:10px 0 0">${isFinal?"结业考试覆盖全部已学内容,":isMonthly?"月考范围为全部已学内容,":"周考以本周主题为主,"}80 分合格:</p>`;
-    h += nameBoxHtml("exName");
-    h += `<button class="btn-main" onclick="startExam()">开始${isFinal?"结业考试":isMonthly?"月考":"周考"}</button>`;
-  }
-  body.innerHTML = h;
-}
-function startExam(){
-  const nm = ensureName("exName"); if (!nm) return;
-  const count = isFinal ? 30 : isMonthly ? 20 : 10;
-  let qs;
-  if (isFinal || isMonthly){
-    const learned = learnedCats(curWeek);   // 月考/结业只考已学分类
-    const pool = BANK.questions.filter(q=>learned.includes(q.cat));
-    qs = shuffled(pool, mulberry32(hash("bra-m-"+todayKey))).slice(0,count);
-  } else {
-    qs = themedPick("bra-e-"+todayKey, curWeek, 10);
-  }
-  qStart("exBody", qs, {
-    passScore: 80,
-    onDone(c, wrong){
-      if (!store.get("e:"+todayKey)) store.set("e:"+todayKey,
-        {c, total:count, score:Math.round(c*100/count), name:nm, monthly:isMonthly, final:isFinal});
-      addWrongs(curWeek, wrong);
-    },
-    copyText(c, score, pass){
-      return `【百日安全】${todayKey.replace("-","/")} ${nm} ${isFinal?"结业考试":isMonthly?"月考":"第"+curWeek+"周周考"} ${c}/${count}题 ${score}分${pass?"(合格)":"(未合格)"}`;
-    }
-  });
+  chip.textContent = "线下"; chip.className = "chip mute";
+  document.getElementById("exBody").innerHTML =
+    `<p class="sub" style="margin:10px 0 0">今天是本月<b>线下月考</b>日：闭卷笔试,满分 100 分、90 分合格,请到现场参加,成绩由记录人登记。网站只做每日答题与日常练习,不在线上月考。</p>`;
 }
 
 // ---- 本周错题卡 ----
@@ -707,14 +706,11 @@ function renderSched(){
     h += `<details class="wk"${open}><summary><span class="wno">第${w}周</span><span class="rng">${rng} · ${themeName(w)}</span></summary>`;
     dl.forEach(r=>{
       const isToday = inRange && r.n===dayNo;
-      const dr = store.get("r:"+r.key), er = store.get("e:"+r.key);
+      const dr = store.get("r:"+r.key);
       h += `<div class="drow${r.rest?" rest":""}${isToday?" today-row":""}">`;
       h += `<span class="dn">第${r.n}天</span><span class="dd">${r.key.replace("-","/")} ${WD[r.d.getDay()]}</span><span>${r.act}</span>`;
-      if (dr || er){
-        const bits = [];
-        if (dr) bits.push("5题"+dr.c*20+"分");
-        if (er) bits.push((er.final?"结业":er.monthly?"月考":"周考")+er.score+"分");
-        h += `<span class="done">✓ ${bits.join(" · ")}</span>`;
+      if (dr){
+        h += `<span class="done">✓ 5题${dr.c*20}分</span>`;
       }
       h += `</div>`;
     });
@@ -723,7 +719,7 @@ function renderSched(){
   el.innerHTML = h;
 }
 
-function refreshAll(){ renderToday(); renderDaily(); renderExam(); renderWrongs(); renderDrill(); renderSched(); }
+function refreshAll(){ renderToday(); renderDraw(); renderDaily(); renderExam(); renderWrongs(); renderDrill(); renderSched(); }
 refreshAll(); renderShort();
 </script>
 </body>
