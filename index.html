@@ -138,7 +138,7 @@ button:focus-visible,.opt:focus-visible,summary:focus-visible{outline:2.5px soli
 <main>
   <section class="card" id="today"></section>
   <details class="card" id="drawCard" open hidden>
-    <summary>每日抽签<span class="chip" id="drawChip"></span></summary>
+    <summary>今日答题人员<span class="chip" id="drawChip"></span></summary>
     <div class="body" id="drawBody"></div>
   </details>
   <details class="card" id="dqCard" open>
@@ -386,46 +386,36 @@ function renderToday(){
   el.innerHTML = h;
 }
 
-// ---- 每日抽签(班前会答题人员) ----
-const SECTIONS = {                       // 每日随机抽 2-3 人的段
-  "肃宁": ["张占江","梁川","吴万飞","李洋洋","王明轩","李毅"],
-  "黄骅港": ["丁旭","任家起","信世磊","王晓东"]
+// ---- 每日固定轮值(班前会答题人员) ----
+// 纯按"第几个工作日"算,写死的轮换:同一天任何设备算出来都一样,不需数据库/不依赖刷新
+const SECTIONS = {
+  "肃宁": { people: ["张占江","梁川","吴万飞","李洋洋","王明轩","李毅"], per: 3 },  // 6人,每天3人,2天一轮
+  "黄骅港": { people: ["丁旭","任家起","信世磊","王晓东"], per: 2 }                  // 4人,每天2人,2天一轮
 };
-function drawFor(dateKey, salt){
-  const rng = mulberry32(hash("draw-"+dateKey+"-"+(salt||"")));
-  const out = {};
-  for (const sec in SECTIONS){
-    const n = rng() < 0.5 ? 2 : 3;       // 每段抽 2-3 人
-    out[sec] = shuffled(SECTIONS[sec], rng).slice(0, n);
-  }
+function workdayOrdinal(){                 // 今天是活动第几个工作日(从1起)
+  let c = 0;
+  for (const r of SCHED){ if (r.n > dayNo) break; if (!r.rest) c++; }
+  return c;
+}
+function dutyFor(sec){                      // 当天该段轮到谁
+  const { people, per } = SECTIONS[sec];
+  const start = ((workdayOrdinal()-1) * per) % people.length;
+  const out = [];
+  for (let i=0; i<per; i++) out.push(people[(start+i) % people.length]);
   return out;
-}
-function drawKey(){ return "bra-draw:"+todayKey; }
-function getDraw(){
-  if (CAN_SAVE){ try{ const v = JSON.parse(localStorage.getItem(drawKey())); if (v) return v; }catch(e){} }
-  else if (MEM["_draw"]) return MEM["_draw"];
-  const d = drawFor(todayKey, "");        // 默认按日期固定,同一天大家看到同一组
-  if (CAN_SAVE){ try{ localStorage.setItem(drawKey(), JSON.stringify(d)); }catch(e){} }
-  return d;
-}
-function redraw(){
-  const d = drawFor(todayKey, String(Date.now()));
-  if (CAN_SAVE){ try{ localStorage.setItem(drawKey(), JSON.stringify(d)); }catch(e){} } else MEM["_draw"] = d;
-  renderDraw();
 }
 function renderDraw(){
   const card = document.getElementById("drawCard");
-  if (!inRange || todayRow.rest){ card.hidden = true; return; }   // 活动期外/休息日不抽签
+  if (!inRange || todayRow.rest){ card.hidden = true; return; }   // 活动期外/休息日不显示
   card.hidden = false;
   const chip = document.getElementById("drawChip");
-  const res = getDraw();
   chip.textContent = todayKey.replace("-","/"); chip.className = "chip mute";
-  let h = `<p class="sub" style="margin:10px 0 0">今日班前会答题人员(抽中者到场,每人 5 题):</p><ul class="tasks">`;
+  let h = `<p class="sub" style="margin:10px 0 0">今日班前会答题人员(每人 5 题),按固定轮值每天自动轮换:</p><ul class="tasks">`;
   for (const sec in SECTIONS){
-    h += `<li><span class="dot">■</span><b>${sec}段</b>：${(res[sec]||[]).join("、")}</li>`;
+    h += `<li><span class="dot">■</span><b>${sec}段</b>：${dutyFor(sec).join("、")}</li>`;
   }
-  h += `<li><span class="dot">■</span><b>神池段</b>：3 人全员作答(不抽签)</li>`;
-  h += `</ul><button class="btn-ghost" onclick="redraw()">重新抽签</button>`;
+  h += `<li><span class="dot">■</span><b>神池段</b>：3 人全员作答</li>`;
+  h += `</ul>`;
   document.getElementById("drawBody").innerHTML = h;
 }
 
