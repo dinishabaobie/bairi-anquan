@@ -360,7 +360,7 @@ function qSubmit(cid){
   if (st.meta.copyText){
     const txt = st.meta.copyText(c, score, pass);
     h += `<div class="copybox" id="ct-${cid}">${txt}</div>`;
-    h += `<button class="btn-main" onclick="copyText('ct-${cid}')">复制成绩,发给班组长</button>`;
+    h += `<button class="btn-main" onclick="copyText('ct-${cid}')">复制成绩</button>`;
   }
   document.getElementById(cid).innerHTML = h;
   refreshAll();
@@ -368,9 +368,9 @@ function qSubmit(cid){
 function copyText(id){
   const t = document.getElementById(id).textContent;
   (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(
-    ()=>alert("已复制,发给班组长即可"),
+    ()=>alert("已复制"),
     ()=>{ const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta);
-      ta.select(); document.execCommand("copy"); ta.remove(); alert("已复制,发给班组长即可"); });
+      ta.select(); document.execCommand("copy"); ta.remove(); alert("已复制"); });
 }
 
 // ---- 今日卡 ----
