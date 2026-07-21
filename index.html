@@ -194,7 +194,10 @@ const WD = ["周日","周一","周二","周三","周四","周五","周六"];
 
 function fmt(d){ return String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function dateOfDay(n){ const d = new Date(START); d.setDate(d.getDate()+n-1); return d; }
-function themeName(w){ const cs = WEEK_CAT[w]; if (!cs) return "综合练习";
+function themeName(w){
+  if (w===14) return "第三阶段 · 总结评优";      // 末次统考后不再安排每日答题
+  if (w===15) return "第三阶段 · 收官";
+  const cs = WEEK_CAT[w]; if (!cs) return "综合练习";
   return (w>=11?"复习:":"") + cs.map(c=>BANK.cats[String(c)]).join("、"); }
 
 // ---- 生成100天日程 ----
@@ -212,10 +215,18 @@ for (let w=1; w<=13; w++){
   const key = VIDEO_DAY_FIX[w] || (fri ? fri.key : null);
   if (key) VIDEO_OF[w] = key;
 }
+// 末次统考(10/16)结束后转入第三阶段:总结评优,不再安排每日答题与视频
+const FINAL_EXAM = "10-16";
+const WRAPUP_ACT = {14:"总结评优 · 统计积分成绩、评选表彰", 15:"收官 · 总结大会、固化制度"};
 SCHED.forEach(r=>{
+  r.wrapup = r.n > SCHED.find(x=>x.key===FINAL_EXAM).n;
   if (r.rest){
     r.act = "休 · "+r.restwhy
           + (VIDEO_OF[r.week]===r.key ? ` · 看视频《${VIDEO_TITLES[r.week]}》` : "");
+    return;
+  }
+  if (r.wrapup){
+    r.act = (WRAPUP_ACT[r.week] || "总结评优") + " · 不排每日答题";
     return;
   }
   const p = [];
@@ -384,6 +395,9 @@ function renderToday(){
         h += `<li><span class="dot">■</span>方案排的本周警示视频《${VIDEO_TITLES[r.week]}》在今天${link?` — <a href="${link}" target="_blank" rel="noopener">点此观看</a>`:"(链接见工作群)"};遇假期由班组另行安排补看</li>`;
       }
       h += `</ul>`;
+    } else if (r.wrapup){
+      h += `<ul class="tasks"><li><span class="dot">■</span>末次统考已结束,进入第三阶段:${WRAPUP_ACT[r.week] || "总结评优"}</li>`;
+      h += `<li><span class="dot">■</span>本阶段不安排每日答题与警示视频;想练手可用下方"百炼成钢"(不计成绩)</li></ul>`;
     } else {
       h += `<ul class="tasks">`;
       if (VIDEO_OF[r.week]===r.key){
@@ -433,7 +447,7 @@ function renderDaily(){
   const chip = document.getElementById("dqChip");
   const body = document.getElementById("dqBody");
   const dr = store.get("r:"+todayKey);
-  const practice = !inRange || todayRow.rest;   // 热身/休息日:练习不计
+  const practice = !inRange || todayRow.rest || todayRow.wrapup;   // 热身/休息日/末考后总结期:练习不计
   if (dr){ chip.textContent = `✓ ${dr.c*20}分`; chip.className = "chip "+(dr.c>=3?"ok":"no"); }
   else if (practice){ chip.textContent = "自愿练习"; chip.className = "chip mute"; }
   else { chip.textContent = "待完成"; chip.className = "chip todo"; }
@@ -443,7 +457,10 @@ function renderDaily(){
     h = `<p class="sub" style="margin:10px 0 0">今天已完成:${dr.c}/5 题,${dr.c*20} 分${dr.c>=3?"(合格)":"(未合格,明天加油)"}。</p>
          <button class="btn-ghost" onclick="startFree()">再随机练一组(不计成绩)</button>`;
   } else {
-    h = `<p class="sub" style="margin:10px 0 0">${practice ? "今天不作要求,练一组保持手感:" : "今天的 5 道题(全员同一组),对 3 题及以上合格:"}</p>`;
+    const tip = (inRange && todayRow.wrapup) ? "末次统考已结束,总结评优阶段不作要求,想练可随时练一组:"
+              : practice ? "今天不作要求,练一组保持手感:"
+              : "今天的 5 道题(全员同一组),对 3 题及以上合格:";
+    h = `<p class="sub" style="margin:10px 0 0">${tip}</p>`;
     h += nameBoxHtml("dqName");
     h += `<button class="btn-main" onclick="startDaily()">开始答题</button>`;
   }
@@ -451,7 +468,7 @@ function renderDaily(){
 }
 function startDaily(){
   const nm = ensureName("dqName"); if (!nm) return;
-  const practice = !inRange || todayRow.rest;
+  const practice = !inRange || todayRow.rest || todayRow.wrapup;
   qStart("dqBody", themedPick("bra-"+todayKey, curWeek, 5, 2), {
     passScore: 60,
     onDone(c, wrong){
