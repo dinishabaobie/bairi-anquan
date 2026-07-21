@@ -208,13 +208,16 @@ for (let n=1; n<=TOTAL; n++){
 const VIDEO_DAY_FIX = {12:"10-08"};   // 第12周撞国庆:方案定为节后首个工作日观看
 const VIDEO_OF = {};
 for (let w=1; w<=13; w++){
-  const wk = SCHED.filter(r=>r.week===w && !r.rest);
-  if (!wk.length) continue;
-  const fri = wk.find(r=>r.d.getDay()===5);          // 方案:每周五班组例会集中观看
-  VIDEO_OF[w] = VIDEO_DAY_FIX[w] || (fri ? fri.key : wk[wk.length-1].key);
+  const fri = SCHED.find(r=>r.week===w && r.d.getDay()===5);   // 方案:每周五班组例会集中观看,假期周五也照排
+  const key = VIDEO_DAY_FIX[w] || (fri ? fri.key : null);
+  if (key) VIDEO_OF[w] = key;
 }
 SCHED.forEach(r=>{
-  if (r.rest){ r.act = "休 · "+r.restwhy; return; }
+  if (r.rest){
+    r.act = "休 · "+r.restwhy
+          + (VIDEO_OF[r.week]===r.key ? ` · 看视频《${VIDEO_TITLES[r.week]}》` : "");
+    return;
+  }
   const p = [];
   if (VIDEO_OF[r.week]===r.key) p.push(`看视频《${VIDEO_TITLES[r.week]}》`);
   p.push("答题5题");
@@ -375,7 +378,12 @@ function renderToday(){
     h += `<div class="theme-tag">第${r.week}周 · ${themeName(r.week)}</div>`;
     if (MAKEUP.has(r.key)) h += `<div class="sub" style="margin-top:6px">今天为调休上班日,任务照常</div>`;
     if (r.rest){
-      h += `<ul class="tasks"><li><span class="dot">■</span>今天休息(${r.restwhy}),不安排任务;闲着可以练一组</li></ul>`;
+      h += `<ul class="tasks"><li><span class="dot">■</span>今天休息(${r.restwhy}),不安排任务;闲着可以练一组</li>`;
+      if (VIDEO_OF[r.week]===r.key){
+        const link = VIDEO_LINKS[r.week];
+        h += `<li><span class="dot">■</span>方案排的本周警示视频《${VIDEO_TITLES[r.week]}》在今天${link?` — <a href="${link}" target="_blank" rel="noopener">点此观看</a>`:"(链接见工作群)"};遇假期由班组另行安排补看</li>`;
+      }
+      h += `</ul>`;
     } else {
       h += `<ul class="tasks">`;
       if (VIDEO_OF[r.week]===r.key){
