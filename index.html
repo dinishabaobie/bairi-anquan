@@ -208,10 +208,11 @@ for (let n=1; n<=TOTAL; n++){
   SCHED.push({n, d, week, key, rest, restwhy: HOLIDAYS[key] || "周末"});
 }
 // 警示视频:第1—13周每周1部(方案逐周安排),第14—15周总结评优不安排
-const VIDEO_DAY_FIX = {12:"10-08"};   // 第12周撞国庆:方案定为节后首个工作日观看
+// 周五撞法定假日的三周,方案已写明具体日期:
+const VIDEO_DAY_FIX = {10:"09-24", 11:"09-29", 12:"10-08"};   // 中秋提前1天/国庆提前(避开9-30月考)/节后首个工作日
 const VIDEO_OF = {};
 for (let w=1; w<=13; w++){
-  const fri = SCHED.find(r=>r.week===w && r.d.getDay()===5);   // 方案:每周五班组例会集中观看,假期周五也照排
+  const fri = SCHED.find(r=>r.week===w && r.d.getDay()===5);   // 方案:每周五班组例会集中观看
   const key = VIDEO_DAY_FIX[w] || (fri ? fri.key : null);
   if (key) VIDEO_OF[w] = key;
 }
